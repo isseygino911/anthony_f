@@ -1,0 +1,154 @@
+import { api } from './client';
+import type {
+  AdminOrder,
+  Category,
+  Notification,
+  Order,
+  OrderAuditLogEntry,
+  OrderStatus,
+  OrderSummary,
+  Paginated,
+  Product,
+  ProductGroup,
+  ProductImage,
+  RevenuePoint,
+} from '../types';
+
+// ---- Products ----
+
+export interface ProductInput {
+  name: string;
+  description?: string;
+  price: number;
+  sku: string;
+  category_id: number;
+  tags?: string[];
+  is_featured?: boolean;
+  is_bestseller?: boolean;
+  is_clearance?: boolean;
+  stock_quantity: number;
+  low_stock_threshold?: number | null;
+}
+
+export function createProduct(input: ProductInput) {
+  return api.post<Product>('/admin/products', input);
+}
+
+export function updateProduct(id: number, input: Partial<ProductInput>) {
+  return api.put<Product>(`/admin/products/${id}`, input);
+}
+
+export function deleteProduct(id: number) {
+  return api.delete<void>(`/admin/products/${id}`);
+}
+
+export function bulkDeleteProducts(ids: number[]) {
+  return api.post<{ softDeleted: number[] }>('/admin/products/bulk-delete', { ids });
+}
+
+export function uploadProductImages(productId: number, files: File[]) {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+  return api.postForm<{ images: ProductImage[] }>(`/admin/products/${productId}/images`, formData);
+}
+
+export function setPrimaryImage(productId: number, imageId: number) {
+  return api.patch<ProductImage>(`/admin/products/${productId}/images/${imageId}`, {
+    is_primary: true,
+  });
+}
+
+export function deleteProductImage(productId: number, imageId: number) {
+  return api.delete<void>(`/admin/products/${productId}/images/${imageId}`);
+}
+
+export function replaceProductGroups(productId: number, groupIds: number[]) {
+  return api.put<{ groupIds: number[] }>(`/admin/products/${productId}/groups`, { groupIds });
+}
+
+// ---- Categories ----
+
+export function createCategory(input: { name: string; slug: string }) {
+  return api.post<Category>('/admin/categories', input);
+}
+
+export function updateCategory(id: number, input: { name?: string; slug?: string }) {
+  return api.put<Category>(`/admin/categories/${id}`, input);
+}
+
+export function deleteCategory(id: number) {
+  return api.delete<void>(`/admin/categories/${id}`);
+}
+
+// ---- Groups ----
+
+export function createGroup(input: { name: string; description?: string }) {
+  return api.post<ProductGroup>('/admin/groups', input);
+}
+
+export function updateGroup(id: number, input: { name?: string; description?: string }) {
+  return api.put<ProductGroup>(`/admin/groups/${id}`, input);
+}
+
+export function deleteGroup(id: number) {
+  return api.delete<void>(`/admin/groups/${id}`);
+}
+
+export function replaceGroupProducts(groupId: number, productIds: number[]) {
+  return api.put<{ productIds: number[] }>(`/admin/groups/${groupId}/products`, { productIds });
+}
+
+// ---- Orders ----
+
+export interface AdminOrderQuery {
+  status?: OrderStatus;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
+
+export function getAdminOrders(query: AdminOrderQuery = {}) {
+  return api.get<Paginated<OrderSummary>>('/admin/orders', { ...query });
+}
+
+export function getAdminOrder(id: number | string) {
+  return api.get<AdminOrder>(`/admin/orders/${id}`);
+}
+
+export type OrderAdjustmentType =
+  | 'discount'
+  | 'refund'
+  | 'shipping_change'
+  | 'manual_adjustment'
+  | 'status_change';
+
+export interface OrderAdjustmentInput {
+  type: OrderAdjustmentType;
+  amount?: number;
+  newStatus?: OrderStatus;
+  reason?: string;
+}
+
+export function adjustOrder(id: number, input: OrderAdjustmentInput) {
+  return api.patch<{ order: Order; auditLogEntry: OrderAuditLogEntry }>(`/admin/orders/${id}`, input);
+}
+
+// ---- Notifications ----
+
+export function getNotifications(query: { unreadOnly?: boolean; page?: number; pageSize?: number } = {}) {
+  return api.get<{ items: Notification[]; unreadCount: number }>('/admin/notifications', { ...query });
+}
+
+export function markNotificationRead(id: number) {
+  return api.patch<Notification>(`/admin/notifications/${id}/read`);
+}
+
+export function markAllNotificationsRead() {
+  return api.patch<void>('/admin/notifications/read-all');
+}
+
+// ---- Dashboard ----
+
+export function getRevenue(query: { granularity: 'daily' | 'monthly'; from?: string; to?: string }) {
+  return api.get<{ series: RevenuePoint[] }>('/admin/dashboard/revenue', { ...query });
+}
