@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCategories, getGroups } from '../../api/products';
+import { CartDrawer } from '../cart/CartDrawer';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
 import { useTheme } from '../../hooks/useTheme';
@@ -25,6 +26,7 @@ export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -58,7 +60,8 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur">
+    <>
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur">
       <div className="container grid h-16 grid-cols-[auto_1fr_auto] items-center gap-4">
         <Link to="/" className="flex items-center gap-2 font-display text-xl uppercase tracking-tight">
           {theme?.logo_url ? (
@@ -108,15 +111,19 @@ export function Header() {
             <Heart className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" asChild aria-label="Cart">
-            <Link to="/cart" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] text-brand-foreground">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => setCartOpen(true)}
+            aria-label="Cart"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {itemCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[10px] text-brand-foreground">
+                {itemCount}
+              </span>
+            )}
           </Button>
 
           <DropdownMenu>
@@ -203,6 +210,8 @@ export function Header() {
           ))}
         </nav>
       )}
-    </header>
+      </header>
+      <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+    </>
   );
 }

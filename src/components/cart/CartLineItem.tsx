@@ -12,7 +12,7 @@ interface CartLineItemProps {
 export function CartLineItem({ item, onUpdateQuantity, onRemove }: CartLineItemProps) {
   return (
     <div className="flex items-center gap-5 border-b border-border/70 py-5 last:border-0">
-      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-md bg-muted">
+      <div className="h-24 w-24 shrink-0 overflow-hidden bg-muted">
         {item.imageUrl ? (
           <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
         ) : null}
