@@ -30,6 +30,7 @@ export const PALETTES: Palette[] = [
   { id: 'forest', label: 'Forest', accent: '#166534', accentSecondary: '#65a30d' },
   { id: 'berry', label: 'Berry', accent: '#9d174d', accentSecondary: '#7c3aed' },
   { id: 'slate', label: 'Slate', accent: '#334155', accentSecondary: '#64748b' },
+  { id: 'graphite', label: 'Graphite', accent: '#111111', accentSecondary: '#707072' },
 ];
 
 export const CUSTOM_PALETTE_ID = 'custom';

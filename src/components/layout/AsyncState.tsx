@@ -3,7 +3,7 @@ import { Skeleton } from '../ui/skeleton';
 /** Shared loading/error/empty presentational states, reused across pages (DRY). */
 export function LoadingGrid({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
         <Skeleton key={i} className="aspect-square w-full" />
       ))}
@@ -20,5 +20,9 @@ export function ErrorMessage({ message }: { message: string }) {
 }
 
 export function EmptyState({ message }: { message: string }) {
-  return <div className="rounded-md border border-dashed p-8 text-center text-muted-foreground">{message}</div>;
+  return (
+    <div className="rounded-md border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
+      {message}
+    </div>
+  );
 }

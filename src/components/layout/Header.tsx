@@ -1,4 +1,5 @@
-import { Heart, LogOut, Menu, Moon, Package, ShoppingCart, Sun, User as UserIcon, X } from 'lucide-react';
+import { Heart, LogOut, Menu, Moon, Package, Search, ShoppingCart, Sun, User as UserIcon, X } from 'lucide-react';
+import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCategories, getGroups } from '../../api/products';
@@ -24,6 +25,7 @@ export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     getCategories()
@@ -41,41 +43,69 @@ export function Header() {
     navigate('/');
   }
 
+  function handleSearchSubmit(e: FormEvent) {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) navigate(`/products?search=${encodeURIComponent(q)}`);
+  }
+
+  function handleFavoritesClick() {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    navigate('/account/favorites');
+  }
+
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between gap-4">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold text-lg">
-            {theme?.logo_url ? (
-              <img src={theme.logo_url} alt={theme.brand_name} className="h-8 w-8 rounded object-contain" />
-            ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded bg-brand text-brand-foreground">
-                {(theme?.brand_name ?? 'S').charAt(0)}
-              </span>
-            )}
-            <span>{theme?.brand_name ?? 'Storefront'}</span>
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur">
+      <div className="container grid h-16 grid-cols-[auto_1fr_auto] items-center gap-4">
+        <Link to="/" className="flex items-center gap-2 font-display text-xl uppercase tracking-tight">
+          {theme?.logo_url ? (
+            <img src={theme.logo_url} alt={theme.brand_name} className="h-8 w-8 object-contain" />
+          ) : (
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-sm text-brand-foreground">
+              {(theme?.brand_name ?? 'S').charAt(0)}
+            </span>
+          )}
+          <span>{theme?.brand_name ?? 'Storefront'}</span>
+        </Link>
+
+        <nav className="hidden items-center justify-center gap-7 text-xs font-medium uppercase tracking-[0.12em] md:flex">
+          <Link to="/" className="transition-colors hover:text-brand">
+            Home
           </Link>
-
-          <nav className="hidden items-center gap-4 text-sm md:flex">
-            <Link to="/" className="hover:text-brand">
-              Home
+          {categories.map((cat) => (
+            <Link key={cat.id} to={`/category/${cat.slug}`} className="transition-colors hover:text-brand">
+              {cat.name}
             </Link>
-            {categories.map((cat) => (
-              <Link key={cat.id} to={`/category/${cat.slug}`} className="hover:text-brand">
-                {cat.name}
-              </Link>
-            ))}
-            {groups.map((group) => (
-              <Link key={group.id} to={`/group/${group.id}`} className="hover:text-brand">
-                {group.name}
-              </Link>
-            ))}
-          </nav>
-        </div>
+          ))}
+          {groups.map((group) => (
+            <Link key={group.id} to={`/group/${group.id}`} className="transition-colors hover:text-brand">
+              {group.name}
+            </Link>
+          ))}
+        </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-1">
+          <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search"
+              aria-label="Search products"
+              className="h-9 w-32 rounded-full border-none bg-muted py-2 pl-9 pr-4 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring lg:w-40 xl:w-56"
+            />
+          </form>
+
           <Button variant="ghost" size="icon" onClick={toggleMode} aria-label="Toggle dark mode">
             {mode === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+
+          <Button variant="ghost" size="icon" onClick={handleFavoritesClick} aria-label="Favorites">
+            <Heart className="h-5 w-5" />
           </Button>
 
           <Button variant="ghost" size="icon" asChild aria-label="Cart">
@@ -146,7 +176,18 @@ export function Header() {
       </div>
 
       {mobileOpen && (
-        <nav className="flex flex-col gap-2 border-t p-4 text-sm md:hidden">
+        <nav className="flex flex-col gap-3 border-t border-border/70 p-5 text-xs font-medium uppercase tracking-[0.12em] md:hidden">
+          <form onSubmit={handleSearchSubmit} className="relative mb-1 md:hidden">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search"
+              aria-label="Search products"
+              className="h-10 w-full rounded-full border-none bg-muted py-2 pl-9 pr-4 text-xs normal-case tracking-normal placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </form>
           <Link to="/" onClick={() => setMobileOpen(false)}>
             Home
           </Link>

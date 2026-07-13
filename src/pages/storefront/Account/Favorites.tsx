@@ -15,8 +15,8 @@ export function Favorites() {
   }, []);
 
   return (
-    <div className="container flex flex-col gap-6 py-8">
-      <h1 className="text-2xl font-semibold">My Favorites</h1>
+    <div className="container flex flex-col gap-8 py-12">
+      <h1 className="font-display text-3xl tracking-tight">My Favorites</h1>
       {error && <ErrorMessage message={error} />}
       {products === null && !error && <LoadingGrid count={4} />}
       {products !== null && (

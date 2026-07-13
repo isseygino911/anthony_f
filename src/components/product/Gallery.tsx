@@ -9,26 +9,26 @@ export function Gallery({ images, alt }: { images: ProductImage[]; alt: string }
 
   if (sorted.length === 0) {
     return (
-      <div className="flex aspect-square items-center justify-center rounded-lg bg-muted text-muted-foreground">
+      <div className="flex aspect-square items-center justify-center bg-muted text-muted-foreground">
         No image available
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+    <div className="space-y-4">
+      <div className="aspect-square overflow-hidden bg-muted">
         <img src={active.url} alt={alt} className="h-full w-full object-cover" />
       </div>
       {sorted.length > 1 && (
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {sorted.map((img, i) => (
             <button
               key={img.id}
               onClick={() => setActiveIndex(i)}
               className={cn(
-                'h-16 w-16 shrink-0 overflow-hidden rounded-md border-2',
-                i === activeIndex ? 'border-brand' : 'border-transparent',
+                'h-16 w-16 shrink-0 overflow-hidden border transition-colors',
+                i === activeIndex ? 'border-foreground' : 'border-border/70 hover:border-foreground/40',
               )}
             >
               <img src={img.url} alt="" className="h-full w-full object-cover" />

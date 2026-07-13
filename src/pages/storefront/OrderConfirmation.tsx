@@ -37,14 +37,14 @@ export function OrderConfirmation() {
   }
 
   return (
-    <div className="container flex max-w-xl flex-col items-center gap-4 py-16 text-center">
+    <div className="container flex max-w-xl flex-col items-center gap-5 py-20 text-center">
       <CheckCircle2 className="h-12 w-12 text-emerald-600" />
-      <h1 className="text-2xl font-semibold">Thank you for your order!</h1>
+      <h1 className="font-display text-3xl tracking-tight">Thank you for your order!</h1>
       <p className="text-muted-foreground">
         Order #{order.id} has been placed and is <strong>{order.status.replace('_', ' ')}</strong>.
       </p>
 
-      <div className="w-full rounded-lg border p-6 text-left">
+      <div className="w-full rounded-md border border-border/70 bg-card p-6 text-left">
         {order.items.map((item) => (
           <div key={item.id} className="flex justify-between py-1 text-sm">
             <span>
@@ -54,7 +54,7 @@ export function OrderConfirmation() {
             <span>{formatCurrency(item.unit_price ? item.unit_price * (item.quantity ?? 1) : (item.amount ?? 0))}</span>
           </div>
         ))}
-        <div className="mt-2 flex justify-between border-t pt-2 font-semibold">
+        <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold">
           <span>Total</span>
           <span>{formatCurrency(order.adjustedTotal ?? order.total)}</span>
         </div>

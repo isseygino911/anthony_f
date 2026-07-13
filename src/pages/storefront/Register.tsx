@@ -33,22 +33,22 @@ export function Register() {
   }
 
   return (
-    <div className="container flex max-w-md flex-col items-center py-16">
+    <div className="container flex max-w-md flex-col items-center py-20">
       <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Create an account</CardTitle>
+        <CardHeader className="items-center pb-2 text-center">
+          <CardTitle className="text-2xl">Create an account</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="space-y-1">
+        <CardContent className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
               <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -60,7 +60,7 @@ export function Register() {
               />
             </div>
             {error && <ErrorMessage message={error} />}
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" disabled={submitting} size="lg">
               {submitting ? 'Creating account...' : 'Create account'}
             </Button>
           </form>

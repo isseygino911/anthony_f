@@ -10,10 +10,18 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: '1rem',
-      screens: { '2xl': '1280px' },
+      padding: {
+        DEFAULT: '1rem',
+        sm: '1.5rem',
+        lg: '3rem',
+      },
+      screens: { '2xl': '1440px' },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['"Oswald"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

@@ -45,8 +45,8 @@ export function Orders() {
   }
 
   return (
-    <div className="container flex flex-col gap-6 py-8">
-      <h1 className="text-2xl font-semibold">My Orders</h1>
+    <div className="container flex flex-col gap-8 py-12">
+      <h1 className="font-display text-3xl tracking-tight">My Orders</h1>
       {error && <ErrorMessage message={error} />}
       {orders === null && !error && (
         <div className="space-y-2">
@@ -58,12 +58,12 @@ export function Orders() {
       {orders !== null && orders.length > 0 && (
         <div className="flex flex-col gap-2">
           {orders.map((order) => (
-            <div key={order.id} className="rounded-lg border">
+            <div key={order.id} className="rounded-md border border-border/70 bg-card">
               <button
-                className="flex w-full items-center justify-between p-4 text-left"
+                className="flex w-full items-center justify-between p-5 text-left"
                 onClick={() => toggleExpand(order.id)}
               >
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-0.5">
                   <span className="font-medium">Order #{order.id}</span>
                   <span className="text-sm text-muted-foreground">
                     {new Date(order.created_at).toLocaleDateString()}
@@ -83,7 +83,7 @@ export function Orders() {
               </button>
 
               {expandedId === order.id && (
-                <div className="border-t p-4">
+                <div className="border-t border-border/70 p-5">
                   {!detail && <Skeleton className="h-16 w-full" />}
                   {detail && (
                     <div className="flex flex-col gap-1 text-sm">
@@ -98,7 +98,7 @@ export function Orders() {
                           </span>
                         </div>
                       ))}
-                      <div className="mt-2 flex justify-between border-t pt-2 font-semibold">
+                      <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold">
                         <span>Total</span>
                         <span>{formatCurrency(detail.adjustedTotal ?? detail.total)}</span>
                       </div>

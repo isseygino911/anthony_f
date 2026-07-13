@@ -18,8 +18,8 @@ export function CartPage() {
   }
 
   return (
-    <div className="container flex flex-col gap-6 py-8">
-      <h1 className="text-2xl font-semibold">Your Cart</h1>
+    <div className="container flex flex-col gap-8 py-12">
+      <h1 className="font-display text-3xl tracking-tight">Your Cart</h1>
 
       {error && <ErrorMessage message={error} />}
 
@@ -47,13 +47,15 @@ export function CartPage() {
             ))}
           </div>
 
-          <div className="flex flex-col gap-4 rounded-lg border p-6">
-            <div className="flex justify-between font-medium">
+          <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-6 lg:sticky lg:top-24 lg:h-fit">
+            <div className="flex justify-between font-display text-lg">
               <span>Subtotal</span>
               <span>{formatCurrency(cart.subtotal)}</span>
             </div>
             <p className="text-xs text-muted-foreground">Shipping and taxes calculated at checkout.</p>
-            <Button onClick={handleCheckout}>Proceed to checkout</Button>
+            <Button onClick={handleCheckout} size="lg">
+              Proceed to checkout
+            </Button>
             <Button variant="ghost" asChild>
               <Link to="/products">Continue shopping</Link>
             </Button>

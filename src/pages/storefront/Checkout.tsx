@@ -55,9 +55,9 @@ export function Checkout() {
   }
 
   return (
-    <div className="container grid grid-cols-1 gap-8 py-8 lg:grid-cols-3">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 lg:col-span-2">
-        <h1 className="text-2xl font-semibold">Shipping information</h1>
+    <div className="container grid grid-cols-1 gap-12 py-12 lg:grid-cols-3">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5 lg:col-span-2">
+        <h1 className="font-display text-3xl tracking-tight">Shipping information</h1>
 
         <Field label="Recipient name">
           <Input required value={address.recipient_name} onChange={(e) => update('recipient_name', e.target.value)} />
@@ -83,20 +83,20 @@ export function Checkout() {
           </Field>
         </div>
 
-        <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+        <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Payment (coming soon)</p>
           <p>Stripe checkout is not yet wired up. Placing an order records it as pending payment.</p>
         </div>
 
         {error && <ErrorMessage message={error} />}
 
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting} size="lg">
           {submitting ? 'Placing order...' : 'Place order'}
         </Button>
       </form>
 
-      <div className="flex flex-col gap-3 rounded-lg border p-6 h-fit">
-        <h2 className="font-semibold">Order summary</h2>
+      <div className="flex h-fit flex-col gap-3 rounded-md border border-border/70 bg-card p-6">
+        <h2 className="font-display text-lg tracking-tight">Order summary</h2>
         {cart.items.map((item) => (
           <div key={item.productId} className="flex justify-between text-sm">
             <span>
@@ -105,7 +105,7 @@ export function Checkout() {
             <span>{formatCurrency(item.price * item.quantity)}</span>
           </div>
         ))}
-        <div className="flex justify-between border-t pt-3 font-medium">
+        <div className="flex justify-between border-t border-border/70 pt-3 font-medium">
           <span>Subtotal</span>
           <span>{formatCurrency(cart.subtotal)}</span>
         </div>
@@ -116,7 +116,7 @@ export function Checkout() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <Label>{label}</Label>
       {children}
     </div>

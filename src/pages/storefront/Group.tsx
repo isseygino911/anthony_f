@@ -42,13 +42,13 @@ export function GroupPage() {
   return (
     <div className="flex flex-col">
       <SectionSurface variant={theme?.section_styles.groupBanner ?? 'gradient'}>
-        <div className="container flex flex-col gap-1 py-12">
-          <h1 className="text-3xl font-semibold">{group?.name ?? 'Group'}</h1>
+        <div className="container flex flex-col gap-2 py-20 text-center">
+          <h1 className="font-display text-4xl tracking-tight">{group?.name ?? 'Group'}</h1>
           {group?.description && <p className="opacity-90">{group.description}</p>}
         </div>
       </SectionSurface>
 
-      <div className="container py-8">
+      <div className="container py-12">
         {error && <ErrorMessage message={error} />}
         {products === null && !error && <LoadingGrid count={8} />}
         {products !== null && <ProductGrid products={products} />}

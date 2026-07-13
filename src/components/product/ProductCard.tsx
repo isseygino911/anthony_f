@@ -33,34 +33,38 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <Card className="group overflow-hidden">
+    <Card className="group overflow-hidden rounded-none border-none bg-transparent shadow-none">
       <Link to={`/product/${product.id}`}>
-        <div className="relative aspect-square bg-muted">
+        <div className="relative aspect-square overflow-hidden bg-muted">
           {primaryImage ? (
-            <img src={primaryImage.url} alt={product.name} className="h-full w-full object-cover" />
+            <img
+              src={primaryImage.url}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-muted-foreground">No image</div>
           )}
           <button
             onClick={handleFavoriteClick}
             aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 backdrop-blur hover:bg-background"
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 backdrop-blur hover:bg-background"
           >
             <Heart className={cn('h-4 w-4', isFavorited && 'fill-brand text-brand')} />
           </button>
           {product.is_clearance && (
-            <span className="absolute left-2 top-2 rounded bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground">
+            <span className="absolute left-3 top-3 rounded-full bg-destructive px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive-foreground">
               Clearance
             </span>
           )}
         </div>
-        <CardContent className="space-y-1 p-4">
-          <h3 className="line-clamp-1 font-medium">{product.name}</h3>
-          <p className="font-semibold text-brand">{formatCurrency(product.price)}</p>
+        <CardContent className="space-y-1 px-0 pb-0 pt-4 text-center">
+          <h3 className="line-clamp-1 text-xs font-medium uppercase tracking-[0.08em]">{product.name}</h3>
+          <p className="font-display text-base text-brand">{formatCurrency(product.price)}</p>
         </CardContent>
       </Link>
-      <CardContent className="pt-0">
-        <Button size="sm" className="w-full" onClick={handleAddToCart}>
+      <CardContent className="px-0 pb-0 pt-3">
+        <Button size="sm" variant="outline" className="w-full" onClick={handleAddToCart}>
           <ShoppingCart className="h-4 w-4" /> Add to cart
         </Button>
       </CardContent>

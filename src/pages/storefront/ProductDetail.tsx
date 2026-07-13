@@ -81,23 +81,23 @@ export function ProductDetail() {
   const outOfStock = product.stockStatus === 'out_of_stock';
 
   return (
-    <div className="container grid grid-cols-1 gap-8 py-8 md:grid-cols-2">
+    <div className="container grid grid-cols-1 gap-16 py-12 md:grid-cols-2 md:py-16">
       <Gallery images={product.images ?? []} alt={product.name} />
 
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">{product.name}</h1>
-          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+      <div className="flex flex-col gap-5 md:pt-4">
+        <div className="space-y-2">
+          <h1 className="font-display text-3xl tracking-tight">{product.name}</h1>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">SKU: {product.sku}</p>
         </div>
 
         {product.stockStatus && <StockBadge status={product.stockStatus} />}
 
-        <p className="text-3xl font-bold text-brand">{formatCurrency(product.price)}</p>
+        <p className="font-display text-2xl text-brand">{formatCurrency(product.price)}</p>
 
-        {product.description && <p className="text-muted-foreground">{product.description}</p>}
+        {product.description && <p className="leading-relaxed text-muted-foreground">{product.description}</p>}
 
-        <div className="flex items-center gap-3">
-          <label htmlFor="qty" className="text-sm font-medium">
+        <div className="flex items-center gap-3 pt-2">
+          <label htmlFor="qty" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Quantity
           </label>
           <input
@@ -106,13 +106,13 @@ export function ProductDetail() {
             min={1}
             value={quantity}
             onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="h-10 w-20 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-11 w-20 rounded-md border border-input bg-background px-3 text-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
             disabled={outOfStock}
           />
         </div>
 
-        <div className="flex gap-3">
-          <Button onClick={handleAddToCart} disabled={outOfStock} className="flex-1">
+        <div className="flex gap-3 pt-2">
+          <Button onClick={handleAddToCart} disabled={outOfStock} size="lg" className="flex-1">
             <ShoppingCart className="h-4 w-4" /> {added ? 'Added!' : 'Add to cart'}
           </Button>
           <Button variant="outline" size="icon" onClick={handleFavoriteClick} aria-label="Toggle favorite">

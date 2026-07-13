@@ -65,10 +65,10 @@ export function CategoryPage() {
   }
 
   return (
-    <div className="container flex flex-col gap-6 py-8">
-      <h1 className="text-2xl font-semibold">{title}</h1>
+    <div className="container flex flex-col gap-8 py-12">
+      <h1 className="font-display text-3xl tracking-tight">{title}</h1>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-b border-border/70 pb-6 sm:flex-row sm:items-center sm:justify-between">
         <Input
           placeholder="Search products..."
           value={searchInput}
