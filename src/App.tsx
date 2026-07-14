@@ -21,6 +21,7 @@ import { Favorites } from './pages/storefront/Account/Favorites';
 import { Orders as MyOrders } from './pages/storefront/Account/Orders';
 import { CartPage } from './pages/storefront/Cart';
 import { CategoryPage } from './pages/storefront/Category';
+import { CompanyInsights } from './pages/storefront/CompanyInsights';
 import { Checkout } from './pages/storefront/Checkout';
 import { GroupPage } from './pages/storefront/Group';
 import { Home } from './pages/storefront/Home';
@@ -48,6 +49,7 @@ function App() {
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/resources/:id" element={<ResourceDetail />} />
+                  <Route path="/company-insights" element={<CompanyInsights />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
