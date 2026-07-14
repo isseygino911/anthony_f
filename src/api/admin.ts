@@ -2,6 +2,7 @@ import { api } from './client';
 import type {
   AdminOrder,
   Category,
+  DocumentResource,
   Notification,
   Order,
   OrderAuditLogEntry,
@@ -145,6 +146,24 @@ export function markNotificationRead(id: number) {
 
 export function markAllNotificationsRead() {
   return api.patch<void>('/admin/notifications/read-all');
+}
+
+// ---- Documents ----
+
+export function uploadDocument(input: { title: string; category?: string; file: File }) {
+  const formData = new FormData();
+  formData.append('title', input.title);
+  if (input.category) formData.append('category', input.category);
+  formData.append('file', input.file);
+  return api.postForm<DocumentResource>('/admin/documents', formData);
+}
+
+export function updateDocument(id: number, input: { title?: string; category?: string; sort_order?: number }) {
+  return api.put<DocumentResource>(`/admin/documents/${id}`, input);
+}
+
+export function deleteDocument(id: number) {
+  return api.delete<void>(`/admin/documents/${id}`);
 }
 
 // ---- Dashboard ----

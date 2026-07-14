@@ -78,6 +78,9 @@ export function Header() {
           <Link to="/" className="transition-colors hover:text-brand">
             Home
           </Link>
+          <Link to="/resources" className="transition-colors hover:text-brand">
+            Resources
+          </Link>
           {categories.map((cat) => (
             <Link key={cat.id} to={`/category/${cat.slug}`} className="transition-colors hover:text-brand">
               {cat.name}
@@ -197,6 +200,9 @@ export function Header() {
           </form>
           <Link to="/" onClick={() => setMobileOpen(false)}>
             Home
+          </Link>
+          <Link to="/resources" onClick={() => setMobileOpen(false)}>
+            Resources
           </Link>
           {categories.map((cat) => (
             <Link key={cat.id} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)}>

@@ -13,6 +13,7 @@ import { OrderDetail } from './pages/admin/OrderDetail';
 import { Orders as AdminOrders } from './pages/admin/Orders';
 import { ProductForm } from './pages/admin/ProductForm';
 import { Products as AdminProducts } from './pages/admin/Products';
+import { AdminResources } from './pages/admin/Resources';
 import { ThemeSettings } from './pages/admin/ThemeSettings';
 import { Favorites } from './pages/storefront/Account/Favorites';
 import { Orders as MyOrders } from './pages/storefront/Account/Orders';
@@ -25,6 +26,8 @@ import { Login } from './pages/storefront/Login';
 import { OrderConfirmation } from './pages/storefront/OrderConfirmation';
 import { ProductDetail } from './pages/storefront/ProductDetail';
 import { Register } from './pages/storefront/Register';
+import { ResourceDetail } from './pages/storefront/ResourceDetail';
+import { Resources } from './pages/storefront/Resources';
 import { ThemeProvider } from './theme/ThemeProvider';
 
 function App() {
@@ -40,6 +43,8 @@ function App() {
                 <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/group/:id" element={<GroupPage />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/resources" element={<Resources />} />
+                <Route path="/resources/:id" element={<ResourceDetail />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -94,6 +99,7 @@ function App() {
                 <Route path="orders/:id" element={<OrderDetail />} />
                 <Route path="theme" element={<ThemeSettings />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="resources" element={<AdminResources />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

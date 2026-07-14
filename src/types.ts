@@ -160,3 +160,11 @@ export interface RevenuePoint {
   revenue: number;
   orderCount: number;
 }
+
+export interface DocumentResource {
+  id: number;
+  title: string;
+  category: string | null;
+  url: string;
+  sort_order: number;
+}

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, Palette, Receipt, Shapes } from 'lucide-react';
+import { FileText, LayoutDashboard, Package, Palette, Receipt, Shapes } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 
@@ -8,6 +8,7 @@ const links = [
   { to: '/admin/groups', label: 'Groups', icon: Shapes },
   { to: '/admin/orders', label: 'Orders', icon: Receipt },
   { to: '/admin/theme', label: 'Theme settings', icon: Palette },
+  { to: '/admin/resources', label: 'Resources', icon: FileText },
 ];
 
 export function AdminSidebar() {
