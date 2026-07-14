@@ -168,3 +168,11 @@ export interface DocumentResource {
   url: string;
   sort_order: number;
 }
+
+export interface AssistantMessage {
+  id: string; // client-generated (crypto.randomUUID()) for React keys — backend has no per-message IDs
+  role: 'user' | 'assistant';
+  content: string;
+  products?: Product[];
+  documents?: DocumentResource[];
+}

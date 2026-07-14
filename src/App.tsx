@@ -3,6 +3,7 @@ import { RequireAdmin } from './components/admin/RequireAdmin';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { RequireAuth } from './components/layout/RequireAuth';
 import { StorefrontLayout } from './components/layout/StorefrontLayout';
+import { AssistantProvider } from './hooks/useAssistant';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { FavoritesProvider } from './hooks/useFavorites';
@@ -36,74 +37,76 @@ function App() {
       <AuthProvider>
         <FavoritesProvider>
           <CartProvider>
-            <Routes>
-              <Route element={<StorefrontLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/products" element={<CategoryPage />} />
-                <Route path="/category/:slug" element={<CategoryPage />} />
-                <Route path="/group/:id" element={<GroupPage />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/resources/:id" element={<ResourceDetail />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route
-                  path="/checkout"
-                  element={
-                    <RequireAuth>
-                      <Checkout />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/order-confirmation/:id"
-                  element={
-                    <RequireAuth>
-                      <OrderConfirmation />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/account/favorites"
-                  element={
-                    <RequireAuth>
-                      <Favorites />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/account/orders"
-                  element={
-                    <RequireAuth>
-                      <MyOrders />
-                    </RequireAuth>
-                  }
-                />
-              </Route>
+            <AssistantProvider>
+              <Routes>
+                <Route element={<StorefrontLayout />}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/products" element={<CategoryPage />} />
+                  <Route path="/category/:slug" element={<CategoryPage />} />
+                  <Route path="/group/:id" element={<GroupPage />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/resources" element={<Resources />} />
+                  <Route path="/resources/:id" element={<ResourceDetail />} />
+                  <Route path="/cart" element={<CartPage />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/checkout"
+                    element={
+                      <RequireAuth>
+                        <Checkout />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/order-confirmation/:id"
+                    element={
+                      <RequireAuth>
+                        <OrderConfirmation />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/account/favorites"
+                    element={
+                      <RequireAuth>
+                        <Favorites />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/account/orders"
+                    element={
+                      <RequireAuth>
+                        <MyOrders />
+                      </RequireAuth>
+                    }
+                  />
+                </Route>
 
-              <Route
-                path="/admin"
-                element={
-                  <RequireAdmin>
-                    <AdminLayout />
-                  </RequireAdmin>
-                }
-              >
-                <Route index element={<Dashboard />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="products/new" element={<ProductForm />} />
-                <Route path="products/:id" element={<ProductForm />} />
-                <Route path="groups" element={<Groups />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="orders/:id" element={<OrderDetail />} />
-                <Route path="theme" element={<ThemeSettings />} />
-                <Route path="notifications" element={<Notifications />} />
-                <Route path="resources" element={<AdminResources />} />
-              </Route>
+                <Route
+                  path="/admin"
+                  element={
+                    <RequireAdmin>
+                      <AdminLayout />
+                    </RequireAdmin>
+                  }
+                >
+                  <Route index element={<Dashboard />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="products/new" element={<ProductForm />} />
+                  <Route path="products/:id" element={<ProductForm />} />
+                  <Route path="groups" element={<Groups />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="orders/:id" element={<OrderDetail />} />
+                  <Route path="theme" element={<ThemeSettings />} />
+                  <Route path="notifications" element={<Notifications />} />
+                  <Route path="resources" element={<AdminResources />} />
+                </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AssistantProvider>
           </CartProvider>
         </FavoritesProvider>
       </AuthProvider>

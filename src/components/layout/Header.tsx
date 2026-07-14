@@ -1,8 +1,21 @@
-import { Heart, LogOut, Menu, Moon, Package, Search, ShoppingCart, Sun, User as UserIcon, X } from 'lucide-react';
+import {
+  Heart,
+  LogOut,
+  Menu,
+  MessageCircle,
+  Moon,
+  Package,
+  Search,
+  ShoppingCart,
+  Sun,
+  User as UserIcon,
+  X,
+} from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCategories, getGroups } from '../../api/products';
+import { AssistantDrawer } from '../assistant/AssistantDrawer';
 import { CartDrawer } from '../cart/CartDrawer';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
@@ -27,6 +40,7 @@ export function Header() {
   const [groups, setGroups] = useState<ProductGroup[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -112,6 +126,10 @@ export function Header() {
 
           <Button variant="ghost" size="icon" onClick={handleFavoritesClick} aria-label="Favorites">
             <Heart className="h-5 w-5" />
+          </Button>
+
+          <Button variant="ghost" size="icon" onClick={() => setAssistantOpen(true)} aria-label="Product assistant">
+            <MessageCircle className="h-5 w-5" />
           </Button>
 
           <Button
@@ -218,6 +236,7 @@ export function Header() {
       )}
       </header>
       <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+      <AssistantDrawer open={assistantOpen} onOpenChange={setAssistantOpen} />
     </>
   );
 }
