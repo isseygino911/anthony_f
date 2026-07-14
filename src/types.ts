@@ -30,6 +30,35 @@ export interface Product {
   deleted_at?: string | null;
 }
 
+export type ProductSeoStatus = 'pending' | 'processing' | 'ready' | 'needs_review' | 'failed';
+
+export interface ProductSeo {
+  productId: number;
+  status: ProductSeoStatus;
+  attempts: number;
+  seo: {
+    meta_title: string;
+    meta_description: string;
+    og_title: string;
+    og_description: string;
+    image_alt_text: string;
+    url_slug: string;
+    primary_keyword: string;
+    secondary_keywords: string[];
+  } | null;
+  geo: {
+    definition_statement: string;
+    key_facts: string[];
+    faq: { q: string; a: string }[];
+    comparison_points: string[];
+  } | null;
+  schemaMarkup: Record<string, unknown> | null;
+  audit: { scores?: Record<string, number>; issues?: string[] } | null;
+  flags: string[];
+  lastError: string | null;
+  updatedAt: string;
+}
+
 export interface Category {
   id: number;
   name: string;

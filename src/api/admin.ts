@@ -12,6 +12,7 @@ import type {
   Product,
   ProductGroup,
   ProductImage,
+  ProductSeo,
   RevenuePoint,
 } from '../types';
 
@@ -49,7 +50,7 @@ export function bulkDeleteProducts(ids: number[]) {
 
 export function uploadProductImages(productId: number, files: File[]) {
   const formData = new FormData();
-  files.forEach((file) => formData.append('files', file));
+  files.forEach((file) => formData.append('images', file));
   return api.postForm<{ images: ProductImage[] }>(`/admin/products/${productId}/images`, formData);
 }
 
@@ -65,6 +66,12 @@ export function deleteProductImage(productId: number, imageId: number) {
 
 export function replaceProductGroups(productId: number, groupIds: number[]) {
   return api.put<{ groupIds: number[] }>(`/admin/products/${productId}/groups`, { groupIds });
+}
+
+// Generated asynchronously by the seo-geo-agent worker after a product is
+// created/updated — 404s until the worker has processed it (status: 'pending').
+export function getProductSeo(productId: number) {
+  return api.get<ProductSeo>(`/admin/products/${productId}/seo`);
 }
 
 // ---- Categories ----

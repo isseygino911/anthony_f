@@ -1,17 +1,20 @@
-import { Star, Trash2, Upload } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { RefreshCw, Star, Trash2, Upload } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   createProduct,
   deleteProductImage,
+  getProductSeo,
   replaceProductGroups,
   setPrimaryImage,
   updateProduct,
   uploadProductImages,
 } from '../../api/admin';
+import { ApiError } from '../../api/client';
 import { getCategories, getGroups, getProduct } from '../../api/products';
 import { ErrorMessage } from '../../components/layout/AsyncState';
+import { SeoStatusBadge } from '../../components/product/SeoStatusBadge';
 import { Button } from '../../components/ui/button';
 import { Checkbox } from '../../components/ui/checkbox';
 import { Input } from '../../components/ui/input';
@@ -19,7 +22,7 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
 import { Textarea } from '../../components/ui/textarea';
-import type { Category, Product, ProductGroup, ProductImage } from '../../types';
+import type { Category, Product, ProductGroup, ProductImage, ProductSeo } from '../../types';
 
 interface FormState {
   name: string;
@@ -63,7 +66,27 @@ export function ProductForm() {
   const [loading, setLoading] = useState(!isNew);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [productSeo, setProductSeo] = useState<ProductSeo | null>(null);
+  const [seoLoading, setSeoLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const refreshSeo = useCallback(async (id: number) => {
+    setSeoLoading(true);
+    try {
+      const seo = await getProductSeo(id);
+      setProductSeo(seo);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setProductSeo(null);
+      }
+    } finally {
+      setSeoLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (productId) refreshSeo(productId);
+  }, [productId, refreshSeo]);
 
   useEffect(() => {
     getCategories()
@@ -180,6 +203,24 @@ export function ProductForm() {
     <div className="flex max-w-2xl flex-col gap-6">
       <h1 className="text-2xl font-semibold">{isNew ? 'New product' : 'Edit product'}</h1>
 
+      <div className="rounded-lg border bg-muted/40 p-4 text-sm">
+        <p className="font-medium">Writing tips for better SEO / GEO results</p>
+        <p className="mt-1 text-muted-foreground">
+          Name, description, category, price, and tags are sent to our AI SEO/GEO generator. Specific,
+          factual details produce better metadata and are less likely to get flagged for review. Vague or
+          marketing-only copy (e.g. &quot;high quality product, you&apos;ll love it&quot;) often gets flagged.
+        </p>
+        <p className="mt-2 text-muted-foreground">
+          Good description example: &quot;Hand-poured soy wax candle, 8oz, cotton wick, lavender &amp;
+          cedarwood scent, burns 40+ hours. Made with natural, phthalate-free fragrance oil. Ideal for
+          bedroom or bath use.&quot;
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          Try to include: material/ingredients, size or dimensions, key features, what makes it different
+          from similar products, and the intended use case or audience.
+        </p>
+      </div>
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <FormField label="Name">
           <Input required value={form.name} onChange={(e) => update('name', e.target.value)} />
@@ -187,6 +228,10 @@ export function ProductForm() {
 
         <FormField label="Description">
           <Textarea value={form.description} onChange={(e) => update('description', e.target.value)} />
+          <p className="text-xs text-muted-foreground">
+            Include material, size/dimensions, key features, and intended use. Specific details help the
+            AI generate accurate SEO/GEO content and reduce the chance of it being flagged.
+          </p>
         </FormField>
 
         <div className="grid grid-cols-2 gap-4">
@@ -222,6 +267,10 @@ export function ProductForm() {
 
         <FormField label="Tags (comma-separated)">
           <Input value={form.tags} onChange={(e) => update('tags', e.target.value)} />
+          <p className="text-xs text-muted-foreground">
+            Use specific, searchable terms (e.g. &quot;soy wax, lavender, gift set&quot;) rather than generic
+            words like &quot;good, best, new&quot;.
+          </p>
         </FormField>
 
         <div className="grid grid-cols-2 gap-4">
@@ -311,6 +360,10 @@ export function ProductForm() {
           )}
         </div>
 
+        {productId && (
+          <SeoPanel seo={productSeo} loading={seoLoading} onRefresh={() => refreshSeo(productId)} />
+        )}
+
         {error && <ErrorMessage message={error} />}
 
         <div className="flex gap-2">
@@ -322,6 +375,77 @@ export function ProductForm() {
           </Button>
         </div>
       </form>
+    </div>
+  );
+}
+
+// Read-only: content comes from the seo-geo-agent worker (see
+// server/scripts/seo-geo-worker.js), not editable here. Saving the product
+// re-queues generation whenever name/description/category/price/tags change.
+function SeoPanel({
+  seo,
+  loading,
+  onRefresh,
+}: {
+  seo: ProductSeo | null;
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+        <p className="font-medium">SEO / GEO</p>
+        <div className="flex items-center gap-2">
+          {seo && <SeoStatusBadge status={seo.status} />}
+          <Button type="button" variant="ghost" size="icon" onClick={onRefresh} disabled={loading}>
+            <RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
+          </Button>
+        </div>
+      </div>
+
+      {!seo && (
+        <p className="text-sm text-muted-foreground">
+          Not generated yet — this runs automatically in the background after saving.
+        </p>
+      )}
+
+      {seo && (seo.status === 'pending' || seo.status === 'processing') && (
+        <p className="text-sm text-muted-foreground">
+          The SEO/GEO worker hasn&apos;t finished processing this product yet. Check back shortly.
+        </p>
+      )}
+
+      {seo?.seo && (
+        <dl className="grid grid-cols-1 gap-2 text-sm">
+          <div>
+            <dt className="text-muted-foreground">Meta title</dt>
+            <dd>{seo.seo.meta_title}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Meta description</dt>
+            <dd>{seo.seo.meta_description}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">URL slug</dt>
+            <dd>{seo.seo.url_slug}</dd>
+          </div>
+        </dl>
+      )}
+
+      {seo && seo.flags.length > 0 && (
+        <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          <p className="font-medium">Flagged for review</p>
+          <ul className="list-disc pl-5">
+            {seo.flags.map((flag) => (
+              <li key={flag}>{flag}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {seo?.status === 'failed' && seo.lastError && (
+        <p className="text-sm text-destructive">Last error: {seo.lastError}</p>
+      )}
     </div>
   );
 }
