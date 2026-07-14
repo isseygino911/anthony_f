@@ -6,6 +6,7 @@ interface SectionSurfaceProps {
   variant: SectionStyle;
   className?: string;
   children: ReactNode;
+  style?: CSSProperties;
 }
 
 /**
@@ -13,11 +14,13 @@ interface SectionSurfaceProps {
  * variables (architecture.md §5.2). Every homepage/group-page section wraps
  * its content in this per `site_theme.section_styles`.
  */
-export function SectionSurface({ variant, className, children }: SectionSurfaceProps) {
-  const style: CSSProperties =
+export function SectionSurface({ variant, className, children, style: customStyle }: SectionSurfaceProps) {
+  const defaultStyle: CSSProperties =
     variant === 'gradient'
       ? { background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-secondary))' }
       : { background: 'var(--brand-primary)' };
+
+  const style = { ...defaultStyle, ...customStyle };
 
   return (
     <section

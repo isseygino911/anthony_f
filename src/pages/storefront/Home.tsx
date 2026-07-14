@@ -79,7 +79,15 @@ export function Home() {
 
   return (
     <div className="flex flex-col">
-      <SectionSurface variant={sectionStyles?.hero ?? 'gradient'} className="relative overflow-hidden">
+      <SectionSurface
+        variant={sectionStyles?.hero ?? 'gradient'}
+        className="relative overflow-hidden"
+        style={{
+          backgroundImage: 'url(/assets/banner.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
         <div className="container flex min-h-[60vh] flex-col justify-end gap-4 py-14 sm:min-h-[70vh] sm:py-20">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">New season</span>
           <h1 className="max-w-3xl font-display text-6xl uppercase leading-[0.88] tracking-normal sm:text-8xl">
