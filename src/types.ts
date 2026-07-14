@@ -205,3 +205,55 @@ export interface AssistantMessage {
   products?: Product[];
   documents?: DocumentResource[];
 }
+
+// ---- Admin AI Insights ----
+
+export type AdminAnalyticsIntent = 'revenue_trend' | 'top_products' | 'sales_projection' | 'out_of_scope';
+
+/** A single prior turn sent as conversational context — the server is stateless. */
+export interface AdminChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface TopProductRow {
+  productId: number | null;
+  name: string;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface ProjectionPoint {
+  period: string;
+  projectedRevenue: number;
+}
+
+export interface AdminAnalyticsData {
+  // revenue_trend
+  granularity?: 'daily' | 'monthly';
+  from?: string;
+  to?: string;
+  series?: RevenuePoint[];
+  // top_products
+  metric?: 'units' | 'revenue';
+  limit?: number;
+  items?: TopProductRow[];
+  // sales_projection
+  history?: RevenuePoint[];
+  projection?: ProjectionPoint[];
+  model?: { slope: number; intercept: number; r2: number };
+  insufficientData?: boolean;
+}
+
+export interface AdminAnalyticsResult {
+  intent: AdminAnalyticsIntent;
+  reply: string;
+  data: AdminAnalyticsData | null;
+}
+
+export interface AdminChatMessage {
+  id: string; // client-generated (crypto.randomUUID()) for React keys — backend has no per-message IDs
+  role: 'user' | 'assistant';
+  content: string;
+  result?: AdminAnalyticsResult;
+}

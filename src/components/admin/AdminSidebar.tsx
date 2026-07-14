@@ -1,4 +1,4 @@
-import { FileText, LayoutDashboard, Package, Palette, Receipt, Shapes } from 'lucide-react';
+import { FileText, LayoutDashboard, Package, Palette, Receipt, Shapes, Sparkles } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 
@@ -9,6 +9,7 @@ const links = [
   { to: '/admin/orders', label: 'Orders', icon: Receipt },
   { to: '/admin/theme', label: 'Theme settings', icon: Palette },
   { to: '/admin/resources', label: 'Resources', icon: FileText },
+  { to: '/admin/insights', label: 'AI Insights', icon: Sparkles },
 ];
 
 export function AdminSidebar() {

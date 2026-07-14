@@ -15,6 +15,7 @@ import { Orders as AdminOrders } from './pages/admin/Orders';
 import { ProductForm } from './pages/admin/ProductForm';
 import { Products as AdminProducts } from './pages/admin/Products';
 import { AdminResources } from './pages/admin/Resources';
+import { Insights } from './pages/admin/Insights';
 import { ThemeSettings } from './pages/admin/ThemeSettings';
 import { Favorites } from './pages/storefront/Account/Favorites';
 import { Orders as MyOrders } from './pages/storefront/Account/Orders';
@@ -102,6 +103,7 @@ function App() {
                   <Route path="theme" element={<ThemeSettings />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="resources" element={<AdminResources />} />
+                  <Route path="insights" element={<Insights />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
