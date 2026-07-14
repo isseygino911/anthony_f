@@ -1,28 +1,36 @@
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
-import { deleteDocument, updateDocument, uploadDocument } from '../../api/admin';
-import { getDocuments } from '../../api/documents';
-import { EmptyState, ErrorMessage } from '../../components/layout/AsyncState';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import type { DocumentResource } from '../../types';
+import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import {
+  deleteDocument,
+  updateDocument,
+  uploadDocument,
+} from "../../api/admin";
+import { getDocuments } from "../../api/documents";
+import { EmptyState, ErrorMessage } from "../../components/layout/AsyncState";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import type { DocumentResource } from "../../types";
 
 export function AdminResources() {
   const [documents, setDocuments] = useState<DocumentResource[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function load() {
     setDocuments(null);
     getDocuments()
       .then((res) => setDocuments(res.items))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load resources'));
+      .catch((err) =>
+        setError(
+          err instanceof Error ? err.message : "Failed to load resources",
+        ),
+      );
   }
 
   useEffect(load, []);
@@ -35,12 +43,14 @@ export function AdminResources() {
     setUploadError(null);
     try {
       await uploadDocument({ title, category: category || undefined, file });
-      setTitle('');
-      setCategory('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setTitle("");
+      setCategory("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       load();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Failed to upload resource');
+      setUploadError(
+        err instanceof Error ? err.message : "Failed to upload resource",
+      );
     } finally {
       setUploading(false);
     }
@@ -67,41 +77,65 @@ export function AdminResources() {
   const groups = groupByCategory(documents ?? []);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-[50%] mx-auto">
       <h1 className="text-2xl font-semibold">Resources</h1>
 
-      <form onSubmit={handleUpload} className="flex flex-col gap-4 rounded-lg border p-4">
+      <form
+        onSubmit={handleUpload}
+        className="flex flex-col gap-4 rounded-lg border p-4"
+      >
         <p className="font-medium">Upload a resource</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-1">
             <Label htmlFor="doc-title">Title</Label>
-            <Input id="doc-title" required value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input
+              id="doc-title"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <Label htmlFor="doc-category">Category (optional)</Label>
-            <Input id="doc-category" value={category} onChange={(e) => setCategory(e.target.value)} />
+            <Input
+              id="doc-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <Label htmlFor="doc-file">PDF file</Label>
-            <Input id="doc-file" type="file" accept="application/pdf" required ref={fileInputRef} />
+            <Input
+              id="doc-file"
+              type="file"
+              accept="application/pdf"
+              required
+              ref={fileInputRef}
+            />
           </div>
         </div>
         {uploadError && <ErrorMessage message={uploadError} />}
         <Button type="submit" disabled={uploading} className="w-fit">
-          {uploading ? 'Uploading...' : 'Upload'}
+          {uploading ? "Uploading..." : "Upload"}
         </Button>
       </form>
 
       {error && <ErrorMessage message={error} />}
 
-      {documents === null && !error && <p className="text-muted-foreground">Loading...</p>}
+      {documents === null && !error && (
+        <p className="text-muted-foreground">Loading...</p>
+      )}
 
-      {documents !== null && documents.length === 0 && <EmptyState message="No resources yet." />}
+      {documents !== null && documents.length === 0 && (
+        <EmptyState message="No resources yet." />
+      )}
 
       <div className="flex flex-col gap-6">
         {groups.map(([category, docs]) => (
           <div key={category} className="flex flex-col gap-2">
-            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{category}</p>
+            <p className="text-sm font-medium uppercase tracking-wide text-white bg-brand px-3 py-3 rounded">
+              {category}
+            </p>
             <div className="flex flex-col gap-2">
               {docs.map((doc, index) => (
                 <DocumentRow
@@ -158,8 +192,8 @@ function DocumentRow({
           onChange={(e) => setValue(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') commit();
-            if (e.key === 'Escape') {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") {
               setValue(doc.title);
               setEditing(false);
             }
@@ -167,7 +201,11 @@ function DocumentRow({
           className="max-w-sm"
         />
       ) : (
-        <button type="button" onClick={() => setEditing(true)} className="truncate text-left text-sm">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="truncate text-left text-sm"
+        >
           {doc.title}
         </button>
       )}
@@ -181,13 +219,30 @@ function DocumentRow({
         >
           View
         </a>
-        <Button variant="ghost" size="icon" onClick={onMoveUp} disabled={isFirst} aria-label="Move up">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMoveUp}
+          disabled={isFirst}
+          aria-label="Move up"
+        >
           <ArrowUp className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={onMoveDown} disabled={isLast} aria-label="Move down">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMoveDown}
+          disabled={isLast}
+          aria-label="Move down"
+        >
           <ArrowDown className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete resource">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onDelete}
+          aria-label="Delete resource"
+        >
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
@@ -195,10 +250,12 @@ function DocumentRow({
   );
 }
 
-function groupByCategory(documents: DocumentResource[]): [string, DocumentResource[]][] {
+function groupByCategory(
+  documents: DocumentResource[],
+): [string, DocumentResource[]][] {
   const map = new Map<string, DocumentResource[]>();
   for (const doc of documents) {
-    const key = doc.category ?? 'other';
+    const key = doc.category ?? "other";
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(doc);
   }

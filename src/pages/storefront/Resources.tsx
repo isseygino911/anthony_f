@@ -1,10 +1,10 @@
-import { FileText } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { getDocuments } from '../../api/documents';
-import { EmptyState, ErrorMessage } from '../../components/layout/AsyncState';
-import { Skeleton } from '../../components/ui/skeleton';
-import type { DocumentResource } from '../../types';
+import { FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { getDocuments } from "../../api/documents";
+import { EmptyState, ErrorMessage } from "../../components/layout/AsyncState";
+import { Skeleton } from "../../components/ui/skeleton";
+import type { DocumentResource } from "../../types";
 
 export function Resources() {
   const [documents, setDocuments] = useState<DocumentResource[] | null>(null);
@@ -17,7 +17,10 @@ export function Resources() {
         if (!cancelled) setDocuments(res.items);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load resources');
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to load resources",
+          );
       });
     return () => {
       cancelled = true;
@@ -28,7 +31,9 @@ export function Resources() {
 
   return (
     <div className="container flex flex-col gap-8 py-12">
-      <h1 className="font-display text-3xl uppercase leading-none tracking-normal sm:text-4xl">Resources</h1>
+      <h1 className="font-display text-3xl uppercase leading-none tracking-normal sm:text-4xl">
+        Resources
+      </h1>
 
       {error && <ErrorMessage message={error} />}
 
@@ -40,7 +45,9 @@ export function Resources() {
         </div>
       )}
 
-      {documents !== null && documents.length === 0 && <EmptyState message="No resources available yet." />}
+      {documents !== null && documents.length === 0 && (
+        <EmptyState message="No resources available yet." />
+      )}
 
       {documents !== null && documents.length > 0 && (
         <div className="flex flex-col gap-10">
@@ -69,10 +76,12 @@ export function Resources() {
   );
 }
 
-function groupByCategory(documents: DocumentResource[]): [string, DocumentResource[]][] {
+function groupByCategory(
+  documents: DocumentResource[],
+): [string, DocumentResource[]][] {
   const map = new Map<string, DocumentResource[]>();
   for (const doc of documents) {
-    const key = doc.category ?? 'other';
+    const key = doc.category ?? "other";
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(doc);
   }
