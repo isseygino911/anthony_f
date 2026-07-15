@@ -2,7 +2,7 @@
  * Single fetch wrapper for every API call (architecture.md §4, §9). Handles:
  *  - request URLs of the form `${VITE_API_URL}/api${path}` — with
  *    VITE_API_URL unset/empty this is a same-origin relative path (Vite dev
- *    proxy forwards /api/* to :4000, Caddy does the same in same-domain
+ *    proxy forwards /api/* to :4002, Caddy does the same in same-domain
  *    production setups); with VITE_API_URL set to an absolute origin (e.g.
  *    https://anthony-api.isseylab.com) requests go fully cross-origin, and
  *    rely on the backend's CORS config plus credentialed-cookie support to

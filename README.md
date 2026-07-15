@@ -11,7 +11,7 @@ client never talks to the backend by absolute URL — all API calls go through
 `src/api/client.ts` using same-origin relative paths (`/api/*`):
 
 - **Dev**: Vite's dev-server proxy (`vite.config.ts`) forwards `/api/*` to
-  the backend, currently hardcoded to `http://localhost:4000`. Update that
+  the backend, currently hardcoded to `http://localhost:4002`. Update that
   file if the backend repo runs on a different host/port locally.
 - **Production**: Caddy (config lives in the backend repo) reverse-proxies
   `/api/*` to the Express process and serves this client's static build
@@ -23,7 +23,7 @@ security notes) see [`docs/architecture.md`](./docs/architecture.md).
 ## Prerequisites
 
 - Node.js 18+ and npm 9+.
-- The separate backend repo running locally (default `http://localhost:4000`)
+- The separate backend repo running locally (default `http://localhost:4002`)
   for any API-backed feature to work in dev.
 
 ## Setup
