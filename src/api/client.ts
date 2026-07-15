@@ -1,7 +1,12 @@
 /**
  * Single fetch wrapper for every API call (architecture.md §4, §9). Handles:
- *  - same-origin relative paths (Vite dev proxy forwards /api/* to :4000,
- *    Caddy does the same in production — no CORS handling needed here)
+ *  - request URLs of the form `${VITE_API_URL}/api${path}` — with
+ *    VITE_API_URL unset/empty this is a same-origin relative path (Vite dev
+ *    proxy forwards /api/* to :4000, Caddy does the same in same-domain
+ *    production setups); with VITE_API_URL set to an absolute origin (e.g.
+ *    https://anthony-api.isseylab.com) requests go fully cross-origin, and
+ *    rely on the backend's CORS config plus credentialed-cookie support to
+ *    keep auth working
  *  - cookies (JWT / anon session / CSRF) via `credentials: 'include'`
  *  - echoing the CSRF cookie back as an `X-CSRF-Token` header on every
  *    mutating request (POST/PUT/PATCH/DELETE), per architecture.md §9
@@ -15,6 +20,7 @@
 
 const CSRF_COOKIE_NAME = 'csrf_token';
 const CSRF_HEADER_NAME = 'X-CSRF-Token';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 export class ApiError extends Error {
   status: number;
@@ -72,7 +78,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     if (csrfToken) headers[CSRF_HEADER_NAME] = csrfToken;
   }
 
-  const response = await fetch(`/api${path}${buildQueryString(options.query)}`, {
+  const response = await fetch(`${API_BASE_URL}/api${path}${buildQueryString(options.query)}`, {
     method,
     headers,
     body,
