@@ -77,7 +77,7 @@ export function AdminResources() {
   const groups = groupByCategory(documents ?? []);
 
   return (
-    <div className="flex flex-col gap-6 w-[50%] mx-auto">
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-semibold">Resources</h1>
 
       <form

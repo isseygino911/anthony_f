@@ -1,15 +1,36 @@
-import { useEffect, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { getRevenue } from '../../api/admin';
-import { ErrorMessage } from '../../components/layout/AsyncState';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Skeleton } from '../../components/ui/skeleton';
-import { formatCurrency } from '../../lib/utils';
-import type { RevenuePoint } from '../../types';
+import { useEffect, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { getRevenue } from "../../api/admin";
+import { ErrorMessage } from "../../components/layout/AsyncState";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { Skeleton } from "../../components/ui/skeleton";
+import { formatCurrency } from "../../lib/utils";
+import type { RevenuePoint } from "../../types";
 
 export function Dashboard() {
-  const [granularity, setGranularity] = useState<'daily' | 'monthly'>('daily');
+  const [granularity, setGranularity] = useState<"daily" | "monthly">("daily");
   const [series, setSeries] = useState<RevenuePoint[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +38,11 @@ export function Dashboard() {
     setSeries(null);
     getRevenue({ granularity })
       .then((res) => setSeries(res.series))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load revenue data'));
+      .catch((err) =>
+        setError(
+          err instanceof Error ? err.message : "Failed to load revenue data",
+        ),
+      );
   }, [granularity]);
 
   const totalRevenue = series?.reduce((sum, p) => sum + p.revenue, 0) ?? 0;
@@ -25,9 +50,12 @@ export function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between ">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Select value={granularity} onValueChange={(v) => setGranularity(v as 'daily' | 'monthly')}>
+        <Select
+          value={granularity}
+          onValueChange={(v) => setGranularity(v as "daily" | "monthly")}
+        >
           <SelectTrigger className="w-40">
             <SelectValue />
           </SelectTrigger>
@@ -45,13 +73,17 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle>Total revenue</CardTitle>
           </CardHeader>
-          <CardContent className="text-3xl font-bold text-brand">{formatCurrency(totalRevenue)}</CardContent>
+          <CardContent className="text-3xl font-bold text-brand">
+            {formatCurrency(totalRevenue)}
+          </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Total orders</CardTitle>
           </CardHeader>
-          <CardContent className="text-3xl font-bold">{totalOrders}</CardContent>
+          <CardContent className="text-3xl font-bold">
+            {totalOrders}
+          </CardContent>
         </Card>
       </div>
 
@@ -68,8 +100,16 @@ export function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip formatter={(value) => formatCurrency(Number(value ?? 0))} />
-                <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={2} dot={false} />
+                <Tooltip
+                  formatter={(value) => formatCurrency(Number(value ?? 0))}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="var(--brand-primary)"
+                  strokeWidth={2}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
