@@ -133,7 +133,7 @@ export function AdminResources() {
       <div className="flex flex-col gap-6">
         {groups.map(([category, docs]) => (
           <div key={category} className="flex flex-col gap-2">
-            <p className="text-sm font-medium uppercase tracking-wide text-white bg-brand px-3 py-3 rounded">
+            <p className="text-sm font-medium uppercase tracking-wide text-brand bg-brand-tint-10 px-3 py-3 rounded">
               {category}
             </p>
             <div className="flex flex-col gap-2">
@@ -184,7 +184,7 @@ function DocumentRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+    <div className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       {editing ? (
         <Input
           autoFocus
@@ -204,13 +204,13 @@ function DocumentRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="truncate text-left text-sm"
+          className="text-left text-sm sm:min-w-0 sm:flex-1 sm:truncate"
         >
           {doc.title}
         </button>
       )}
 
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center justify-end gap-2">
         <a
           href={doc.url}
           target="_blank"

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getAdminOrders } from "../../api/admin";
 import { EmptyState, ErrorMessage } from "../../components/layout/AsyncState";
 import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
   Select,
@@ -101,41 +102,74 @@ export function Orders() {
         <EmptyState message="No orders found." />
       )}
       {orders !== null && orders.length > 0 && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <>
+          {/* Desktop/tablet: full data table (unchanged). */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">#{order.id}</TableCell>
+                    <TableCell>
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_VARIANT[order.status] ?? "default"}>
+                        {order.status.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatCurrency(order.total)}</TableCell>
+                    <TableCell>
+                      <Link
+                        to={`/admin/orders/${order.id}`}
+                        className="text-sm text-brand hover:underline"
+                      >
+                        View
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile: card list — same data/filters as the table above. */}
+          <div className="flex flex-col gap-3 md:hidden">
             {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">#{order.id}</TableCell>
-                <TableCell>
-                  {new Date(order.created_at).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={STATUS_VARIANT[order.status] ?? "default"}>
+              <div key={order.id} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium">#{order.id}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={STATUS_VARIANT[order.status] ?? "default"}
+                    className="shrink-0"
+                  >
                     {order.status.replace("_", " ")}
                   </Badge>
-                </TableCell>
-                <TableCell>{formatCurrency(order.total)}</TableCell>
-                <TableCell>
-                  <Link
-                    to={`/admin/orders/${order.id}`}
-                    className="text-sm text-brand hover:underline"
-                  >
-                    View
-                  </Link>
-                </TableCell>
-              </TableRow>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <span className="font-medium">{formatCurrency(order.total)}</span>
+                  <Button variant="ghost" size="sm" asChild className="shrink-0">
+                    <Link to={`/admin/orders/${order.id}`}>View</Link>
+                  </Button>
+                </div>
+              </div>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        </>
       )}
     </div>
   );

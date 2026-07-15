@@ -85,47 +85,92 @@ export function Products() {
       {products !== null && products.length === 0 && <EmptyState message="No products yet." />}
 
       {products !== null && products.length > 0 && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <Checkbox checked={selected.size === products.length} onCheckedChange={toggleAll} />
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Flags</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <>
+          {/* Desktop/tablet: full data table (unchanged). */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={selected.size === products.length} onCheckedChange={toggleAll} />
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Flags</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(product.id)}
+                        onCheckedChange={() => toggleSelected(product.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>{product.sku}</TableCell>
+                    <TableCell>{formatCurrency(product.price)}</TableCell>
+                    <TableCell>{product.stock_quantity ?? '—'}</TableCell>
+                    <TableCell className="flex flex-wrap gap-1">
+                      {product.is_featured && <Badge variant="secondary">Featured</Badge>}
+                      {product.is_bestseller && <Badge variant="secondary">Bestseller</Badge>}
+                      {product.is_clearance && <Badge variant="warning">Clearance</Badge>}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/admin/products/${product.id}`}>Edit</Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile: card list — same state/handlers as the table above. */}
+          <div className="flex flex-col gap-3 md:hidden">
+            <div className="flex items-center gap-2 px-1">
+              <Checkbox
+                checked={selected.size === products.length}
+                onCheckedChange={toggleAll}
+                aria-label="Select all products"
+              />
+              <span className="text-sm text-muted-foreground">Select all</span>
+            </div>
             {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>
+              <div key={product.id} className="rounded-lg border p-3">
+                <div className="flex items-start gap-3">
                   <Checkbox
+                    className="mt-0.5"
                     checked={selected.has(product.id)}
                     onCheckedChange={() => toggleSelected(product.id)}
+                    aria-label={`Select ${product.name}`}
                   />
-                </TableCell>
-                <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell>{product.sku}</TableCell>
-                <TableCell>{formatCurrency(product.price)}</TableCell>
-                <TableCell>{product.stock_quantity ?? '—'}</TableCell>
-                <TableCell className="flex flex-wrap gap-1">
-                  {product.is_featured && <Badge variant="secondary">Featured</Badge>}
-                  {product.is_bestseller && <Badge variant="secondary">Bestseller</Badge>}
-                  {product.is_clearance && <Badge variant="warning">Clearance</Badge>}
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm" asChild>
+                  <p className="min-w-0 flex-1 font-medium leading-snug">{product.name}</p>
+                  <Button variant="ghost" size="sm" asChild className="shrink-0">
                     <Link to={`/admin/products/${product.id}`}>Edit</Link>
                   </Button>
-                </TableCell>
-              </TableRow>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 pl-7 text-xs text-muted-foreground">
+                  <span>{product.sku}</span>
+                  <span>{formatCurrency(product.price)}</span>
+                  <span>Stock: {product.stock_quantity ?? '—'}</span>
+                </div>
+                {(product.is_featured || product.is_bestseller || product.is_clearance) && (
+                  <div className="mt-2 flex flex-wrap gap-1 pl-7">
+                    {product.is_featured && <Badge variant="secondary">Featured</Badge>}
+                    {product.is_bestseller && <Badge variant="secondary">Bestseller</Badge>}
+                    {product.is_clearance && <Badge variant="warning">Clearance</Badge>}
+                  </div>
+                )}
+              </div>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        </>
       )}
     </div>
   );
