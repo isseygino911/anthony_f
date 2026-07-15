@@ -17,6 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
   const isFavorited = favoriteIds.has(product.id);
+  const outOfStock = product.stockStatus === 'out_of_stock';
 
   function handleFavoriteClick(e: MouseEvent) {
     e.preventDefault();
@@ -29,6 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   function handleAddToCart(e: MouseEvent) {
     e.preventDefault();
+    if (outOfStock) return;
     addItem(product.id, 1);
   }
 
@@ -64,8 +66,8 @@ export function ProductCard({ product }: { product: Product }) {
         </CardContent>
       </Link>
       <CardContent className="px-0 pb-0 pt-3">
-        <Button size="sm" variant="outline" className="w-full" onClick={handleAddToCart}>
-          <ShoppingCart className="h-4 w-4" /> Add to cart
+        <Button size="sm" variant="outline" className="w-full" onClick={handleAddToCart} disabled={outOfStock}>
+          <ShoppingCart className="h-4 w-4" /> {outOfStock ? 'Out of stock' : 'Add to cart'}
         </Button>
       </CardContent>
     </Card>
