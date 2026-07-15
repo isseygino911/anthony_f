@@ -17,6 +17,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Local Claude Code tooling (agent skills, etc.) — machine-local, not project source
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

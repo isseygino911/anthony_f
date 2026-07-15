@@ -39,6 +39,7 @@ export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [groups, setGroups] = useState<ProductGroup[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,6 +72,21 @@ export function Header() {
       return;
     }
     navigate('/account/favorites');
+  }
+
+  function toggleMobileSearch() {
+    setMobileOpen(false);
+    setMobileSearchOpen((v) => !v);
+  }
+
+  function toggleMobileMenu() {
+    setMobileSearchOpen(false);
+    setMobileOpen((v) => !v);
+  }
+
+  function handleMobileSearchSubmit(e: FormEvent) {
+    handleSearchSubmit(e);
+    setMobileSearchOpen(false);
   }
 
   return (
@@ -110,7 +126,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-end gap-2">
           <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -123,16 +139,33 @@ export function Header() {
             />
           </form>
 
-          <Button variant="ghost" size="icon" onClick={toggleMode} aria-label="Toggle dark mode">
+          <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={toggleMode} aria-label="Toggle dark mode">
             {mode === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={handleFavoritesClick} aria-label="Favorites">
+          <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={handleFavoritesClick} aria-label="Favorites">
             <Heart className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={() => setAssistantOpen(true)} aria-label="Product assistant">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden md:inline-flex"
+            onClick={() => setAssistantOpen(true)}
+            aria-label="Product assistant"
+          >
             <MessageCircle className="h-5 w-5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={toggleMobileSearch}
+            aria-label={mobileSearchOpen ? 'Close search' : 'Search'}
+            aria-expanded={mobileSearchOpen}
+          >
+            {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
           </Button>
 
           <Button
@@ -152,7 +185,7 @@ export function Header() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Account">
+              <Button variant="ghost" size="icon" className="hidden md:inline-flex" aria-label="Account">
                 <UserIcon className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -198,27 +231,34 @@ export function Header() {
             variant="ghost"
             size="icon"
             className="md:hidden"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Menu"
+            onClick={toggleMobileMenu}
+            aria-label={mobileOpen ? 'Close menu' : 'Menu'}
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
-      {mobileOpen && (
-        <nav className="flex flex-col gap-3 border-t border-border/70 p-5 text-xs font-medium uppercase tracking-[0.12em] md:hidden">
-          <form onSubmit={handleSearchSubmit} className="relative mb-1 md:hidden">
+      {mobileSearchOpen && (
+        <div className="border-t border-border/70 p-4 md:hidden">
+          <form onSubmit={handleMobileSearchSubmit} className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search"
+              placeholder="Search products"
               aria-label="Search products"
+              autoFocus
               className="h-10 w-full rounded-full border-none bg-muted py-2 pl-9 pr-4 text-xs normal-case tracking-normal placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </form>
+        </div>
+      )}
+
+      {mobileOpen && (
+        <nav className="flex flex-col gap-3 border-t border-border/70 p-5 text-xs font-medium uppercase tracking-[0.12em] md:hidden">
           <Link to="/" onClick={() => setMobileOpen(false)}>
             Home
           </Link>
@@ -238,6 +278,70 @@ export function Header() {
               {group.name}
             </Link>
           ))}
+
+          <div className="mt-1 flex flex-col gap-1 border-t border-border/70 pt-4">
+            <span className="pb-1 text-[10px] normal-case tracking-normal text-muted-foreground">Preferences</span>
+            <button type="button" onClick={toggleMode} className="flex items-center py-2 text-left">
+              {mode === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+              {mode === 'dark' ? 'Light mode' : 'Dark mode'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileOpen(false);
+                handleFavoritesClick();
+              }}
+              className="flex items-center py-2 text-left"
+            >
+              <Heart className="mr-2 h-4 w-4" /> Favorites
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileOpen(false);
+                setAssistantOpen(true);
+              }}
+              className="flex items-center py-2 text-left"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" /> Ask the assistant
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-1 border-t border-border/70 pt-4">
+            <span className="pb-1 text-[10px] normal-case tracking-normal text-muted-foreground">Account</span>
+            {user ? (
+              <>
+                <span className="pb-1 text-[11px] normal-case tracking-normal text-foreground">{user.name}</span>
+                <Link to="/account/orders" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
+                  <Package className="mr-2 h-4 w-4" /> Orders
+                </Link>
+                {user.role === 'admin' && (
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
+                    Admin panel
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex items-center py-2 text-left"
+                >
+                  <LogOut className="mr-2 h-4 w-4" /> Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
+                  <UserIcon className="mr-2 h-4 w-4" /> Log in
+                </Link>
+                <Link to="/register" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
+                  Create account
+                </Link>
+              </>
+            )}
+          </div>
         </nav>
       )}
       </header>
