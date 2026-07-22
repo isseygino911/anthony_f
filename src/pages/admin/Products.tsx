@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { bulkDeleteProducts } from '../../api/admin';
+import { bulkDeleteProducts, setProductActive } from '../../api/admin';
 import { getProducts } from '../../api/products';
 import { EmptyState, ErrorMessage } from '../../components/layout/AsyncState';
 import { Badge } from '../../components/ui/badge';
@@ -17,10 +17,11 @@ export function Products() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   function load() {
     setProducts(null);
-    getProducts({ pageSize: 100 })
+    getProducts({ pageSize: 100, includeInactive: true })
       .then((res) => setProducts(res.items))
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load products'));
   }
@@ -39,6 +40,18 @@ export function Products() {
   function toggleAll() {
     if (!products) return;
     setSelected((prev) => (prev.size === products.length ? new Set() : new Set(products.map((p) => p.id))));
+  }
+
+  async function handleToggleActive(product: Product) {
+    const nextActive = product.is_active === false;
+    if (!nextActive && !confirm(`Take down "${product.name}" from the storefront?`)) return;
+    setTogglingId(product.id);
+    try {
+      await setProductActive(product.id, nextActive);
+      load();
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   async function handleBulkDelete() {
@@ -119,10 +132,19 @@ export function Products() {
                       {product.is_featured && <Badge variant="secondary">Featured</Badge>}
                       {product.is_bestseller && <Badge variant="secondary">Bestseller</Badge>}
                       {product.is_clearance && <Badge variant="warning">Clearance</Badge>}
+                      {product.is_active === false && <Badge variant="destructive">Disabled</Badge>}
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" asChild>
                         <Link to={`/admin/products/${product.id}`}>Edit</Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleActive(product)}
+                        disabled={togglingId === product.id}
+                      >
+                        {product.is_active === false ? 'Enable' : 'Disable'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -154,17 +176,27 @@ export function Products() {
                   <Button variant="ghost" size="sm" asChild className="shrink-0">
                     <Link to={`/admin/products/${product.id}`}>Edit</Link>
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => handleToggleActive(product)}
+                    disabled={togglingId === product.id}
+                  >
+                    {product.is_active === false ? 'Enable' : 'Disable'}
+                  </Button>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 pl-7 text-xs text-muted-foreground">
                   <span>{product.sku}</span>
                   <span>{formatCurrency(product.price)}</span>
                   <span>Stock: {product.stock_quantity ?? '—'}</span>
                 </div>
-                {(product.is_featured || product.is_bestseller || product.is_clearance) && (
+                {(product.is_featured || product.is_bestseller || product.is_clearance || product.is_active === false) && (
                   <div className="mt-2 flex flex-wrap gap-1 pl-7">
                     {product.is_featured && <Badge variant="secondary">Featured</Badge>}
                     {product.is_bestseller && <Badge variant="secondary">Bestseller</Badge>}
                     {product.is_clearance && <Badge variant="warning">Clearance</Badge>}
+                    {product.is_active === false && <Badge variant="destructive">Disabled</Badge>}
                   </div>
                 )}
               </div>

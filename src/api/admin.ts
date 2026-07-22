@@ -48,6 +48,10 @@ export function bulkDeleteProducts(ids: number[]) {
   return api.post<{ softDeleted: number[] }>('/admin/products/bulk-delete', { ids });
 }
 
+export function setProductActive(id: number, isActive: boolean) {
+  return api.patch<Product>(`/admin/products/${id}/status`, { is_active: isActive });
+}
+
 export function uploadProductImages(productId: number, files: File[]) {
   const formData = new FormData();
   files.forEach((file) => formData.append('images', file));

@@ -37,7 +37,7 @@ export function Groups() {
 
   useEffect(load, []);
   useEffect(() => {
-    getProducts({ pageSize: 100 })
+    getProducts({ pageSize: 100, includeInactive: true })
       .then((res) => setAllProducts(res.items))
       .catch(() => setAllProducts([]));
   }, []);
@@ -126,7 +126,7 @@ function GroupRow({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    getGroupProducts(group.id, { pageSize: 100 })
+    getGroupProducts(group.id, { pageSize: 100, includeInactive: true })
       .then((res) => setMemberIds(new Set(res.items.map((p) => p.id))))
       .catch(() => setMemberIds(new Set()))
       .finally(() => setLoaded(true));

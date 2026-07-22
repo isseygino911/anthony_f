@@ -24,6 +24,7 @@ export interface Product {
   is_clearance: boolean;
   stock_quantity?: number; // admin-only; omitted for customer-facing responses
   low_stock_threshold?: number | null;
+  is_active?: boolean; // admin-only; true unless the admin has taken the product down
   stockStatus?: StockStatus; // present on customer-facing product detail responses
   images?: ProductImage[];
   groupIds?: number[];

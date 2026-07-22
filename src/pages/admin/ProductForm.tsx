@@ -99,7 +99,7 @@ export function ProductForm() {
 
   useEffect(() => {
     if (isNew) return;
-    getProduct(id!)
+    getProduct(id!, { includeInactive: true })
       .then((product: Product) => {
         setForm({
           name: product.name,
