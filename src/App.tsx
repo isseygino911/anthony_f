@@ -7,6 +7,8 @@ import { AssistantProvider } from './hooks/useAssistant';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { FavoritesProvider } from './hooks/useFavorites';
+import { CustomNeonDesignDetail } from './pages/admin/CustomNeonDesignDetail';
+import { CustomNeonDesigns } from './pages/admin/CustomNeonDesigns';
 import { Dashboard } from './pages/admin/Dashboard';
 import { Groups } from './pages/admin/Groups';
 import { Notifications } from './pages/admin/Notifications';
@@ -22,6 +24,7 @@ import { Orders as MyOrders } from './pages/storefront/Account/Orders';
 import { CartPage } from './pages/storefront/Cart';
 import { CategoryPage } from './pages/storefront/Category';
 import { CompanyInsights } from './pages/storefront/CompanyInsights';
+import { CustomNeon } from './pages/storefront/CustomNeon';
 import { Checkout } from './pages/storefront/Checkout';
 import { GroupPage } from './pages/storefront/Group';
 import { Home } from './pages/storefront/Home';
@@ -50,6 +53,14 @@ function App() {
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/resources/:id" element={<ResourceDetail />} />
                   <Route path="/company-insights" element={<CompanyInsights />} />
+                  <Route
+                    path="/custom-neon"
+                    element={
+                      <RequireAuth>
+                        <CustomNeon />
+                      </RequireAuth>
+                    }
+                  />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -102,6 +113,8 @@ function App() {
                   <Route path="groups" element={<Groups />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="orders/:id" element={<OrderDetail />} />
+                  <Route path="custom-neon-designs" element={<CustomNeonDesigns />} />
+                  <Route path="custom-neon-designs/:id" element={<CustomNeonDesignDetail />} />
                   <Route path="theme" element={<ThemeSettings />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="resources" element={<AdminResources />} />

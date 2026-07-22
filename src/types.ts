@@ -178,11 +178,44 @@ export interface SiteTheme extends ThemeResponse {
 
 export interface Notification {
   id: number;
-  type: 'low_stock';
+  type: 'low_stock' | 'custom_design_ordered';
   product_id: number | null;
   message: string;
   is_read: boolean;
   created_at: string;
+}
+
+// ---- Custom Neon Designer ----
+
+export type DesignType = 'upload' | 'draw' | 'text';
+export type CustomNeonDesignStatus = 'pending' | 'processing' | 'ready' | 'needs_review' | 'failed';
+export type NeonSize = 'small' | 'medium' | 'large';
+export type NeonColor = 'amber' | 'pink' | 'blue' | 'white';
+
+export interface CustomNeonDesignInputPayload {
+  sourceImageUrl?: string;
+  strokes?: unknown;
+  renderedImageUrl?: string;
+  text?: string;
+  fontFamily?: string | null;
+}
+
+export interface CustomNeonDesign {
+  id: number;
+  designType: DesignType;
+  inputPayload: CustomNeonDesignInputPayload;
+  size: NeonSize | null;
+  neonColor: string | null;
+  price: number | null;
+  status: CustomNeonDesignStatus;
+  attempts: number;
+  lastError: string | null;
+  generatedImageUrl: string | null;
+  imagesPurgedAt: string | null;
+  productId: number | null;
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RevenuePoint {

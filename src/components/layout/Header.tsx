@@ -124,6 +124,9 @@ export function Header() {
               {group.name}
             </Link>
           ))}
+          <Link to="/custom-neon" className="transition-colors hover:text-brand">
+            Custom Neon
+          </Link>
         </nav>
 
         <div className="flex items-center justify-end gap-2">
@@ -278,6 +281,9 @@ export function Header() {
               {group.name}
             </Link>
           ))}
+          <Link to="/custom-neon" onClick={() => setMobileOpen(false)}>
+            Custom Neon
+          </Link>
 
           <div className="mt-1 flex flex-col gap-1 border-t border-border/70 pt-4">
             <span className="pb-1 text-[10px] normal-case tracking-normal text-muted-foreground">Preferences</span>

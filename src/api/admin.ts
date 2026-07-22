@@ -2,6 +2,8 @@ import { api } from './client';
 import type {
   AdminOrder,
   Category,
+  CustomNeonDesign,
+  CustomNeonDesignStatus,
   DocumentResource,
   Notification,
   Order,
@@ -175,6 +177,20 @@ export function updateDocument(id: number, input: { title?: string; category?: s
 
 export function deleteDocument(id: number) {
   return api.delete<void>(`/admin/documents/${id}`);
+}
+
+// ---- Custom Neon Designs ----
+
+export function getAdminCustomNeonDesigns(query: { status?: CustomNeonDesignStatus; page?: number; pageSize?: number } = {}) {
+  return api.get<Paginated<CustomNeonDesign>>('/admin/custom-neon-designs', { ...query });
+}
+
+export function getAdminCustomNeonDesign(id: number | string) {
+  return api.get<CustomNeonDesign>(`/admin/custom-neon-designs/${id}`);
+}
+
+export function updateAdminCustomNeonDesignNotes(id: number, adminNotes: string) {
+  return api.patch<CustomNeonDesign>(`/admin/custom-neon-designs/${id}`, { admin_notes: adminNotes });
 }
 
 // ---- Dashboard ----
