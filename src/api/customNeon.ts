@@ -1,6 +1,15 @@
 import { api } from './client';
 import type { Cart, CustomNeonDesign, DesignType, NeonColor, NeonSize } from '../types';
 
+// Single source of truth for the size -> physical dimension label, shared by
+// the storefront designer (paired with pricing) and the admin views (shown
+// as-is) so the two never drift apart.
+export const NEON_SIZE_LABELS: Record<NeonSize, string> = {
+  small: '12"x12"',
+  medium: '24"x24"',
+  large: '36"x36"',
+};
+
 export interface CreateDesignInput {
   designType: DesignType;
   file: File;

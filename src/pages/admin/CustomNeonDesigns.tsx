@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminCustomNeonDesigns } from '../../api/admin';
+import { NEON_SIZE_LABELS } from '../../api/customNeon';
 import { EmptyState, ErrorMessage } from '../../components/layout/AsyncState';
 import { DesignStatusBadge } from '../../components/product/DesignStatusBadge';
 import { Button } from '../../components/ui/button';
@@ -66,7 +67,7 @@ export function CustomNeonDesigns() {
                     </TableCell>
                     <TableCell className="capitalize">{design.designType}</TableCell>
                     <TableCell className="capitalize">
-                      {design.size ? `${design.size} / ${design.neonColor}` : '—'}
+                      {design.size ? `${NEON_SIZE_LABELS[design.size]} / ${design.neonColor}` : '—'}
                     </TableCell>
                     <TableCell>{design.price !== null ? formatCurrency(design.price) : '—'}</TableCell>
                     <TableCell>
@@ -106,7 +107,7 @@ export function CustomNeonDesigns() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium capitalize">
-                    {design.designType} {design.size ? `— ${design.size}` : ''}
+                    {design.designType} {design.size ? `— ${NEON_SIZE_LABELS[design.size]}` : ''}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {design.price !== null ? formatCurrency(design.price) : 'Not confirmed yet'}

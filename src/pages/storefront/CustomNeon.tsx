@@ -2,7 +2,7 @@ import { Loader2, Pencil, RefreshCw, Type as TypeIcon, Upload } from "lucide-rea
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { confirmDesign, createDesign, getDesign, regenerateDesign } from "../../api/customNeon";
+import { NEON_SIZE_LABELS, confirmDesign, createDesign, getDesign, regenerateDesign } from "../../api/customNeon";
 import { ApiError } from "../../api/client";
 import { ErrorMessage } from "../../components/layout/AsyncState";
 import { DesignStatusBadge } from "../../components/product/DesignStatusBadge";
@@ -24,9 +24,9 @@ const MODES: { value: Mode; label: string; icon: typeof Upload }[] = [
 ];
 
 const SIZE_OPTIONS: { value: NeonSize; label: string; price: number }[] = [
-  { value: "small", label: "Small", price: 149 },
-  { value: "medium", label: "Medium", price: 249 },
-  { value: "large", label: "Large", price: 349 },
+  { value: "small", label: NEON_SIZE_LABELS.small, price: 249.99 },
+  { value: "medium", label: NEON_SIZE_LABELS.medium, price: 399.99 },
+  { value: "large", label: NEON_SIZE_LABELS.large, price: 524.99 },
 ];
 
 const COLOR_OPTIONS: { value: NeonColor; label: string; swatch: string }[] = [

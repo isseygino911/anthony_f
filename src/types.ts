@@ -218,6 +218,15 @@ export interface CustomNeonDesign {
   updatedAt: string;
 }
 
+export interface CustomNeonUsageRow {
+  userId: number;
+  userEmail: string | null;
+  userName: string | null;
+  designCount: number;
+  confirmedCount: number;
+  lastGeneratedAt: string;
+}
+
 export interface RevenuePoint {
   period: string;
   revenue: number;

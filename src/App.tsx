@@ -9,6 +9,7 @@ import { CartProvider } from './hooks/useCart';
 import { FavoritesProvider } from './hooks/useFavorites';
 import { CustomNeonDesignDetail } from './pages/admin/CustomNeonDesignDetail';
 import { CustomNeonDesigns } from './pages/admin/CustomNeonDesigns';
+import { CustomNeonUsage } from './pages/admin/CustomNeonUsage';
 import { Dashboard } from './pages/admin/Dashboard';
 import { Groups } from './pages/admin/Groups';
 import { Notifications } from './pages/admin/Notifications';
@@ -115,6 +116,7 @@ function App() {
                   <Route path="orders/:id" element={<OrderDetail />} />
                   <Route path="custom-neon-designs" element={<CustomNeonDesigns />} />
                   <Route path="custom-neon-designs/:id" element={<CustomNeonDesignDetail />} />
+                  <Route path="custom-neon-usage" element={<CustomNeonUsage />} />
                   <Route path="theme" element={<ThemeSettings />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="resources" element={<AdminResources />} />

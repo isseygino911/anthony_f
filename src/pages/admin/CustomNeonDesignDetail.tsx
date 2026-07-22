@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getAdminCustomNeonDesign, updateAdminCustomNeonDesignNotes } from '../../api/admin';
+import { NEON_SIZE_LABELS } from '../../api/customNeon';
 import { ErrorMessage } from '../../components/layout/AsyncState';
 import { DesignStatusBadge } from '../../components/product/DesignStatusBadge';
 import { Button } from '../../components/ui/button';
@@ -98,7 +99,7 @@ export function CustomNeonDesignDetail() {
         <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
           <div>
             <dt className="text-muted-foreground">Size</dt>
-            <dd className="capitalize">{design.size ?? '—'}</dd>
+            <dd>{design.size ? NEON_SIZE_LABELS[design.size] : '—'}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Color</dt>

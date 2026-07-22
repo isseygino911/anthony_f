@@ -4,6 +4,7 @@ import type {
   Category,
   CustomNeonDesign,
   CustomNeonDesignStatus,
+  CustomNeonUsageRow,
   DocumentResource,
   Notification,
   Order,
@@ -191,6 +192,10 @@ export function getAdminCustomNeonDesign(id: number | string) {
 
 export function updateAdminCustomNeonDesignNotes(id: number, adminNotes: string) {
   return api.patch<CustomNeonDesign>(`/admin/custom-neon-designs/${id}`, { admin_notes: adminNotes });
+}
+
+export function getAdminCustomNeonUsage(query: { page?: number; pageSize?: number } = {}) {
+  return api.get<Paginated<CustomNeonUsageRow>>('/admin/custom-neon-usage', { ...query });
 }
 
 // ---- Dashboard ----
