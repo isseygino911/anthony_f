@@ -19,8 +19,12 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
-        display: ['"Oswald"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        // "Lumina Luxe" pairing (Stitch design system): Hanken Grotesk for
+        // body/UI, Bricolage Grotesque for display headlines, Geist for
+        // widely-tracked labels/eyebrows.
+        sans: ['"Hanken Grotesk"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['"Bricolage Grotesque"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        label: ['"Geist"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',

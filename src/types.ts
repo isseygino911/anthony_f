@@ -161,6 +161,12 @@ export interface AdminOrder extends Order {
 export type SectionKey = 'hero' | 'featured' | 'groupBanner' | 'footer';
 export type SectionStyle = 'gradient' | 'flat';
 
+export interface SocialLinks {
+  instagram: string | null;
+  pinterest: string | null;
+  behance: string | null;
+}
+
 export interface ThemeResponse {
   brand_name: string;
   tagline: string | null;
@@ -169,6 +175,7 @@ export interface ThemeResponse {
   palette_id: string;
   custom_colors: { primary: string; secondary: string } | null;
   section_styles: Record<SectionKey, SectionStyle>;
+  social_links: SocialLinks | null;
   default_mode: 'light' | 'dark' | 'auto';
 }
 

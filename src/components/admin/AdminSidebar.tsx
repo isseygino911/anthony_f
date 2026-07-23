@@ -1,4 +1,4 @@
-import { Bell, FileText, Lightbulb, LayoutDashboard, Package, Palette, Receipt, Shapes, Sparkles, Users } from 'lucide-react';
+import { Bell, FileText, Lightbulb, LayoutDashboard, Mail, Package, Palette, Receipt, Shapes, Sparkles, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
@@ -38,6 +38,7 @@ const navGroups: NavGroup[] = [
     label: 'Site settings',
     items: [
       { to: '/admin/theme', label: 'Theme settings', icon: Palette },
+      { to: '/admin/newsletter', label: 'Newsletter', icon: Mail },
       { to: '/admin/resources', label: 'Resources', icon: FileText },
       { to: '/admin/notifications', label: 'Notifications', icon: Bell },
     ],
@@ -61,7 +62,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground',
-                  isActive && 'bg-brand-tint-10 font-semibold text-brand',
+                  isActive && 'bg-brand-tint-10 font-semibold text-brand-tint-90',
                 )
               }
             >

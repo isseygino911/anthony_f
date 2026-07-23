@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { RequireAdmin } from './components/admin/RequireAdmin';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { RequireAuth } from './components/layout/RequireAuth';
+import { SmoothScrollProvider } from './components/layout/SmoothScrollProvider';
 import { StorefrontLayout } from './components/layout/StorefrontLayout';
 import { AssistantProvider } from './hooks/useAssistant';
 import { AuthProvider } from './hooks/useAuth';
@@ -12,6 +13,7 @@ import { CustomNeonDesigns } from './pages/admin/CustomNeonDesigns';
 import { CustomNeonUsage } from './pages/admin/CustomNeonUsage';
 import { Dashboard } from './pages/admin/Dashboard';
 import { Groups } from './pages/admin/Groups';
+import { Newsletter } from './pages/admin/Newsletter';
 import { Notifications } from './pages/admin/Notifications';
 import { OrderDetail } from './pages/admin/OrderDetail';
 import { Orders as AdminOrders } from './pages/admin/Orders';
@@ -44,6 +46,7 @@ function App() {
         <FavoritesProvider>
           <CartProvider>
             <AssistantProvider>
+              <SmoothScrollProvider>
               <Routes>
                 <Route element={<StorefrontLayout />}>
                   <Route path="/" element={<Home />} />
@@ -118,6 +121,7 @@ function App() {
                   <Route path="custom-neon-designs/:id" element={<CustomNeonDesignDetail />} />
                   <Route path="custom-neon-usage" element={<CustomNeonUsage />} />
                   <Route path="theme" element={<ThemeSettings />} />
+                  <Route path="newsletter" element={<Newsletter />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="resources" element={<AdminResources />} />
                   <Route path="insights" element={<Insights />} />
@@ -125,6 +129,7 @@ function App() {
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </SmoothScrollProvider>
             </AssistantProvider>
           </CartProvider>
         </FavoritesProvider>

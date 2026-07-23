@@ -198,6 +198,18 @@ export function getAdminCustomNeonUsage(query: { page?: number; pageSize?: numbe
   return api.get<Paginated<CustomNeonUsageRow>>('/admin/custom-neon-usage', { ...query });
 }
 
+// ---- Newsletter ----
+
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  subscribed_at: string;
+}
+
+export function getNewsletterSubscribers(query: { page?: number; pageSize?: number } = {}) {
+  return api.get<Paginated<NewsletterSubscriber>>('/admin/newsletter/subscribers', { ...query });
+}
+
 // ---- Dashboard ----
 
 export function getRevenue(query: { granularity: 'daily' | 'monthly'; from?: string; to?: string }) {

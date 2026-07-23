@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { SectionKey, SectionStyle, SiteTheme, ThemeResponse } from '../types';
+import type { SectionKey, SectionStyle, SiteTheme, SocialLinks, ThemeResponse } from '../types';
 
 export function getTheme() {
   return api.get<ThemeResponse>('/theme');
@@ -12,6 +12,7 @@ export interface ThemeSaveInput {
   palette_id?: string;
   custom_colors?: { primary: string; secondary: string };
   section_styles?: Record<SectionKey, SectionStyle>;
+  social_links?: SocialLinks;
   default_mode?: 'light' | 'dark' | 'auto';
 }
 

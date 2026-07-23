@@ -36,6 +36,18 @@ export function getDesign(id: number) {
   return api.get<CustomNeonDesign>(`/custom-neon-designs/${id}`);
 }
 
+export interface ShowcaseDesign {
+  id: number;
+  label: string;
+  dimensions: string | null;
+  imageUrl: string;
+}
+
+// Public — no auth required. Used by the landing page gallery.
+export function getShowcaseDesigns(limit = 10) {
+  return api.get<{ items: ShowcaseDesign[] }>('/custom-neon-designs/showcase', { limit });
+}
+
 // Passing size/neonColor updates the design's stored values before it
 // re-queues, so changing either in the UI and hitting "Re-run AI preview"
 // regenerates using the new values instead of the ones from the first run.

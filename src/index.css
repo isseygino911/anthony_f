@@ -6,57 +6,60 @@
   :root {
     /* Neutral surface/text tokens (shadcn defaults) — mode-aware via
        [data-mode], independent of brand hue per architecture.md §5.3.
-       Nike-inspired monochrome grey scale — black/white/grey only, so
-       product photography and brand accent stay the sole color sources. */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 7%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 44%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 7%;
-    --accent: 0 0% 90%;
-    --accent-foreground: 0 0% 7%;
-    --destructive: 359 100% 41%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 79%;
-    --input: 0 0% 79%;
-    --ring: 217 67% 46%;
+       "Lumina Luxe" scale (from the Stitch design system): a near-black,
+       slightly cool-neutral surface stack built for "the glow in the dark" —
+       the brand is intentionally dark-only, so [data-mode='dark'] below
+       converges on the same values rather than inverting to a light scale. */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 89%;
+    --card: 180 4% 11%;
+    --card-foreground: 0 0% 89%;
+    --popover: 180 4% 11%;
+    --popover-foreground: 0 0% 89%;
+    --muted: 200 4% 16%;
+    --muted-foreground: 64 22% 73%;
+    --secondary: 180 2% 20%;
+    --secondary-foreground: 0 0% 89%;
+    --accent: 180 3% 12%;
+    --accent-foreground: 0 0% 89%;
+    --destructive: 6 100% 84%;
+    --destructive-foreground: 357 100% 21%;
+    --border: 180 1% 14%;
+    --input: 180 1% 14%;
+    --ring: 66 100% 50%;
     --radius: 0.5rem;
 
     /* Brand tokens: fallback values only, immediately overwritten by
-       theme/applyTheme.ts once GET /api/theme resolves. Never rely on
-       these fallbacks for actual brand color decisions. */
-    --brand-primary: #2563eb;
-    --brand-secondary: #7c3aed;
-    --brand-primary-tint-10: #eef2ff;
-    --brand-primary-tint-90: #1e293b;
-    --brand-primary-hover: #1d4ed8;
-    --brand-primary-active: #1e40af;
-    --brand-foreground: #ffffff;
+       theme/applyTheme.ts once GET /api/theme resolves. Set to the Stitch
+       "Neon Glow" palette (theme/palettes.ts `neon`) so an unthemed load
+       still reads as this brand rather than the old blue/violet default. */
+    --brand-primary: #e6ff00;
+    --brand-secondary: #bdd200;
+    --brand-primary-tint-10: #f4ffa3;
+    --brand-primary-tint-90: #2e3400;
+    --brand-primary-hover: #d1e600;
+    --brand-primary-active: #bdd200;
+    --brand-foreground: #2e3400;
   }
 
   [data-mode='dark'] {
-    --background: 0 0% 16%;
-    --foreground: 0 0% 96%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 96%;
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 96%;
-    --muted: 0 0% 22%;
-    --muted-foreground: 0 0% 63%;
-    --accent: 0 0% 22%;
-    --accent-foreground: 0 0% 96%;
-    --secondary: 0 0% 22%;
-    --secondary-foreground: 0 0% 96%;
-    --destructive: 359 100% 47%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 27%;
-    --input: 0 0% 27%;
-    --ring: 205 100% 53%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 89%;
+    --card: 180 4% 11%;
+    --card-foreground: 0 0% 89%;
+    --popover: 180 4% 11%;
+    --popover-foreground: 0 0% 89%;
+    --muted: 200 4% 16%;
+    --muted-foreground: 64 22% 73%;
+    --accent: 180 3% 12%;
+    --accent-foreground: 0 0% 89%;
+    --secondary: 180 2% 20%;
+    --secondary-foreground: 0 0% 89%;
+    --destructive: 6 100% 84%;
+    --destructive-foreground: 357 100% 21%;
+    --border: 180 1% 14%;
+    --input: 180 1% 14%;
+    --ring: 66 100% 50%;
   }
 
   * {
@@ -65,5 +68,51 @@
 
   body {
     @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  /* "Glow" effects from the Stitch design system — driven by --brand-primary
+     via color-mix() so they stay theme-token-correct instead of hardcoding
+     the neon-yellow hex. */
+  .neon-aura {
+    filter: drop-shadow(0 0 35px color-mix(in srgb, var(--brand-primary) 40%, transparent));
+    animation: pulse-aura 4s ease-in-out infinite alternate;
+  }
+
+  .cta-glow {
+    animation: text-pulse 3s infinite alternate;
+  }
+
+  .neon-button-glow {
+    transition: box-shadow 0.3s ease;
+  }
+  .neon-button-glow:hover {
+    box-shadow: 0 0 20px color-mix(in srgb, var(--brand-primary) 60%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .neon-aura,
+    .cta-glow {
+      animation: none;
+    }
+  }
+}
+
+@keyframes pulse-aura {
+  0% {
+    filter: drop-shadow(0 0 25px color-mix(in srgb, var(--brand-primary) 25%, transparent));
+  }
+  100% {
+    filter: drop-shadow(0 0 50px color-mix(in srgb, var(--brand-primary) 55%, transparent));
+  }
+}
+
+@keyframes text-pulse {
+  from {
+    text-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 0%, transparent);
+  }
+  to {
+    text-shadow: 0 0 30px color-mix(in srgb, var(--brand-primary) 50%, transparent);
   }
 }

@@ -133,7 +133,7 @@ export function AdminResources() {
       <div className="flex flex-col gap-6">
         {groups.map(([category, docs]) => (
           <div key={category} className="flex flex-col gap-2">
-            <p className="text-sm font-medium uppercase tracking-wide text-brand bg-brand-tint-10 px-3 py-3 rounded">
+            <p className="text-sm font-medium uppercase tracking-wide text-brand-tint-90 bg-brand-tint-10 px-3 py-3 rounded">
               {category}
             </p>
             <div className="flex flex-col gap-2">

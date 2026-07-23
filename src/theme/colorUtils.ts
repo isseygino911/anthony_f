@@ -62,8 +62,30 @@ export function shiftLightness(hex: string, amount: number): string {
   return hslToString({ ...hsl, l: clamp(hsl.l + amount, 0, 100) });
 }
 
+// WCAG relative luminance (not HSL lightness) — HSL treats every fully
+// saturated hue as 50% lightness regardless of how bright it actually looks
+// (pure yellow and pure blue both compute to l=50%), so it misjudges bright
+// hues like neon yellow/lime as "needs white text" when they need dark text.
+// Relative luminance weights each channel by how much it contributes to
+// perceived brightness (green >> red >> blue), which gets this right.
+function relativeLuminance(hex: string): number {
+  const normalized = hex.replace('#', '');
+  const full =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : normalized;
+  const channels = [0, 2, 4].map((i) => {
+    const c = parseInt(full.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const [r, g, b] = channels;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 /** Picks black or white foreground text for a given background hex, for contrast. */
 export function contrastForeground(hex: string): string {
-  const { l } = hexToHsl(hex);
-  return l > 60 ? '#0f172a' : '#ffffff';
+  return relativeLuminance(hex) > 0.5 ? '#0f172a' : '#ffffff';
 }

@@ -50,6 +50,9 @@ export function ThemeSettings() {
   const [defaultMode, setDefaultMode] = useState<"light" | "dark" | "auto">(
     "auto",
   );
+  const [instagram, setInstagram] = useState("");
+  const [pinterest, setPinterest] = useState("");
+  const [behance, setBehance] = useState("");
 
   useEffect(() => {
     getTheme()
@@ -59,6 +62,9 @@ export function ThemeSettings() {
         setLogoUrl(data.logo_url ?? "");
         setSectionStyles(data.section_styles);
         setDefaultMode(data.default_mode);
+        setInstagram(data.social_links?.instagram ?? "");
+        setPinterest(data.social_links?.pinterest ?? "");
+        setBehance(data.social_links?.behance ?? "");
 
         setPaletteId(data.palette_id);
         setCustomPrimary(
@@ -130,6 +136,7 @@ export function ThemeSettings() {
         palette_id: paletteId,
         custom_colors: paletteId === CUSTOM_PALETTE_ID ? colors : undefined,
         section_styles: sectionStyles,
+        social_links: { instagram, pinterest, behance },
         default_mode: defaultMode,
       });
       setSaved(true);
@@ -289,6 +296,37 @@ export function ThemeSettings() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Social links</Label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="space-y-1">
+            <Label className="text-xs font-normal text-muted-foreground">Instagram</Label>
+            <Input
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              placeholder="https://instagram.com/..."
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs font-normal text-muted-foreground">Pinterest</Label>
+            <Input
+              value={pinterest}
+              onChange={(e) => setPinterest(e.target.value)}
+              placeholder="https://pinterest.com/..."
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs font-normal text-muted-foreground">Behance</Label>
+            <Input
+              value={behance}
+              onChange={(e) => setBehance(e.target.value)}
+              placeholder="https://behance.net/..."
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">Leave a field blank to hide that link in the footer.</p>
       </div>
 
       <div className="space-y-1">
