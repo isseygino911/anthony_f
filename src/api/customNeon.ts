@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Cart, CustomNeonDesign, DesignType, NeonColor, NeonSize } from '../types';
+import type { Cart, CustomNeonDesign, DesignType, NeonColor, NeonSize, Paginated } from '../types';
 
 // Single source of truth for the size -> physical dimension label, shared by
 // the storefront designer (paired with pricing) and the admin views (shown
@@ -34,6 +34,12 @@ export function createDesign(input: CreateDesignInput) {
 
 export function getDesign(id: number) {
   return api.get<CustomNeonDesign>(`/custom-neon-designs/${id}`);
+}
+
+// "My Designs" account page — every design the current user has ever
+// generated, any status.
+export function listMyDesigns(query: { page?: number; pageSize?: number } = {}) {
+  return api.get<Paginated<CustomNeonDesign>>('/custom-neon-designs', { ...query });
 }
 
 export interface ShowcaseDesign {
