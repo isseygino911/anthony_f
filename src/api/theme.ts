@@ -14,6 +14,7 @@ export interface ThemeSaveInput {
   section_styles?: Record<SectionKey, SectionStyle>;
   social_links?: SocialLinks;
   default_mode?: 'light' | 'dark' | 'auto';
+  tax_rate_percent?: number;
 }
 
 export function saveTheme(input: ThemeSaveInput) {

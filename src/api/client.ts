@@ -20,7 +20,7 @@
 
 const CSRF_COOKIE_NAME = 'csrf_token';
 const CSRF_HEADER_NAME = 'X-CSRF-Token';
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 export class ApiError extends Error {
   status: number;

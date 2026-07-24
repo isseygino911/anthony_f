@@ -177,6 +177,7 @@ export interface ThemeResponse {
   section_styles: Record<SectionKey, SectionStyle>;
   social_links: SocialLinks | null;
   default_mode: 'light' | 'dark' | 'auto';
+  tax_rate_percent: number;
 }
 
 export interface SiteTheme extends ThemeResponse {

@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, ApiError, API_BASE_URL } from './client';
 import type {
   AdminOrder,
   Category,
@@ -146,6 +146,36 @@ export interface OrderAdjustmentInput {
 
 export function adjustOrder(id: number, input: OrderAdjustmentInput) {
   return api.patch<{ order: Order; auditLogEntry: OrderAuditLogEntry }>(`/admin/orders/${id}`, input);
+}
+
+// Binary PDF response — the shared `api` wrapper is JSON-only, so this is a
+// standalone fetch that mirrors client.ts's base-URL + credentials handling.
+export async function downloadInvoice(id: number | string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/orders/${id}/invoice`, {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const isJson = response.headers.get('content-type')?.includes('application/json');
+    const payload = isJson ? await response.json().catch(() => null) : null;
+    const err = payload?.error;
+    throw new ApiError(
+      response.status,
+      err?.message ?? response.statusText ?? 'Failed to download invoice',
+      err?.code,
+      err?.details,
+    );
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `invoice-${id}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // ---- Notifications ----

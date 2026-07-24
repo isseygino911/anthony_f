@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useParams } from "react-router-dom";
-import { adjustOrder, getAdminOrder } from "../../api/admin";
+import { adjustOrder, downloadInvoice, getAdminOrder } from "../../api/admin";
 import type { OrderAdjustmentType } from "../../api/admin";
 import { ErrorMessage } from "../../components/layout/AsyncState";
 import { Badge } from "../../components/ui/badge";
@@ -20,9 +20,9 @@ import { Textarea } from "../../components/ui/textarea";
 import { formatCurrency } from "../../lib/utils";
 import type { AdminOrder, OrderStatus } from "../../types";
 
-const ADJUSTMENT_TYPES: { value: OrderAdjustmentType; label: string }[] = [
+const ADJUSTMENT_TYPES: { value: OrderAdjustmentType; label: string; disabled?: boolean }[] = [
   { value: "discount", label: "Discount" },
-  { value: "refund", label: "Refund" },
+  { value: "refund", label: "Refund (under construction)", disabled: true },
   { value: "shipping_change", label: "Shipping change" },
   { value: "manual_adjustment", label: "Manual adjustment" },
   { value: "status_change", label: "Status change" },
@@ -48,6 +48,8 @@ export function OrderDetail() {
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
   function load() {
     if (!id) return;
@@ -63,6 +65,10 @@ export function OrderDetail() {
   async function handleAdjust(e: FormEvent) {
     e.preventDefault();
     if (!order) return;
+    if (adjType === "refund") {
+      setFormError("Refund adjustments are temporarily disabled.");
+      return;
+    }
     setSubmitting(true);
     setFormError(null);
     try {
@@ -89,12 +95,41 @@ export function OrderDetail() {
   if (error) return <ErrorMessage message={error} />;
   if (!order) return <Skeleton className="h-64 w-full" />;
 
+  async function handleDownloadInvoice() {
+    if (!order) return;
+    setDownloadingInvoice(true);
+    setInvoiceError(null);
+    try {
+      await downloadInvoice(order.id);
+    } catch (err) {
+      setInvoiceError(
+        err instanceof Error ? err.message : "Failed to download invoice",
+      );
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Order #{order.id}</h1>
-        <Badge>{order.status.replace("_", " ")}</Badge>
+        <div className="flex items-center gap-3">
+          {order.status === "delivered" && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDownloadInvoice}
+              disabled={downloadingInvoice}
+            >
+              {downloadingInvoice ? "Downloading..." : "Download Invoice"}
+            </Button>
+          )}
+          <Badge>{order.status.replace("_", " ")}</Badge>
+        </div>
       </div>
+
+      {invoiceError && <ErrorMessage message={invoiceError} />}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-lg border p-4">
@@ -164,7 +199,7 @@ export function OrderDetail() {
               </SelectTrigger>
               <SelectContent>
                 {ADJUSTMENT_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
+                  <SelectItem key={t.value} value={t.value} disabled={t.disabled}>
                     {t.label}
                   </SelectItem>
                 ))}
@@ -196,7 +231,7 @@ export function OrderDetail() {
               <Label>
                 {adjType === "discount"
                   ? "Discount amount"
-                  : "Amount (negative for discount/refund, positive for added fee)"}
+                  : "Amount (negative to reduce total, positive to add)"}
               </Label>
               <Input
                 type="number"

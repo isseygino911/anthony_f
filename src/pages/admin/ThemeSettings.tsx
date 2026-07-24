@@ -53,6 +53,7 @@ export function ThemeSettings() {
   const [instagram, setInstagram] = useState("");
   const [pinterest, setPinterest] = useState("");
   const [behance, setBehance] = useState("");
+  const [taxRatePercent, setTaxRatePercent] = useState("0.00");
 
   useEffect(() => {
     getTheme()
@@ -65,6 +66,7 @@ export function ThemeSettings() {
         setInstagram(data.social_links?.instagram ?? "");
         setPinterest(data.social_links?.pinterest ?? "");
         setBehance(data.social_links?.behance ?? "");
+        setTaxRatePercent(data.tax_rate_percent.toFixed(2));
 
         setPaletteId(data.palette_id);
         setCustomPrimary(
@@ -127,6 +129,18 @@ export function ThemeSettings() {
     setSaving(true);
     setSaved(false);
     setError(null);
+
+    const parsedTaxRate = Number(taxRatePercent);
+    if (
+      !Number.isFinite(parsedTaxRate) ||
+      parsedTaxRate < 0 ||
+      parsedTaxRate > 100
+    ) {
+      setError("Tax rate must be a number between 0 and 100.");
+      setSaving(false);
+      return;
+    }
+
     try {
       const colors = activeColors();
       await saveTheme({
@@ -138,6 +152,7 @@ export function ThemeSettings() {
         section_styles: sectionStyles,
         social_links: { instagram, pinterest, behance },
         default_mode: defaultMode,
+        tax_rate_percent: Number(parsedTaxRate.toFixed(2)),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -344,6 +359,17 @@ export function ThemeSettings() {
             <SelectItem value="auto">Auto (system)</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-1">
+        <Label>Tax rate (%)</Label>
+        <Input
+          type="text"
+          inputMode="decimal"
+          className="w-48"
+          value={taxRatePercent}
+          onChange={(e) => setTaxRatePercent(e.target.value)}
+        />
       </div>
 
       <div className="space-y-2">
