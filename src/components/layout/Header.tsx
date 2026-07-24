@@ -3,11 +3,10 @@ import {
   LogOut,
   Menu,
   MessageCircle,
-  Moon,
   Package,
   Search,
   ShoppingCart,
-  Sun,
+  Sparkles,
   User as UserIcon,
   X,
 } from 'lucide-react';
@@ -32,7 +31,7 @@ import {
 import { Button } from '../ui/button';
 
 export function Header() {
-  const { theme, mode, toggleMode } = useTheme();
+  const { theme } = useTheme();
   const { user, logout } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
@@ -72,6 +71,14 @@ export function Header() {
       return;
     }
     navigate('/account/favorites');
+  }
+
+  function handleAssistantClick() {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    setAssistantOpen(true);
   }
 
   function toggleMobileSearch() {
@@ -142,10 +149,6 @@ export function Header() {
             />
           </form>
 
-          <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={toggleMode} aria-label="Toggle dark mode">
-            {mode === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
-
           <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={handleFavoritesClick} aria-label="Favorites">
             <Heart className="h-5 w-5" />
           </Button>
@@ -154,7 +157,7 @@ export function Header() {
             variant="ghost"
             size="icon"
             className="hidden md:inline-flex"
-            onClick={() => setAssistantOpen(true)}
+            onClick={handleAssistantClick}
             aria-label="Product assistant"
           >
             <MessageCircle className="h-5 w-5" />
@@ -205,6 +208,11 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link to="/account/orders">
                       <Package className="mr-2 h-4 w-4" /> Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/account/designs">
+                      <Sparkles className="mr-2 h-4 w-4" /> My Designs
                     </Link>
                   </DropdownMenuItem>
                   {user.role === 'admin' && (
@@ -287,10 +295,6 @@ export function Header() {
 
           <div className="mt-1 flex flex-col gap-1 border-t border-border/70 pt-4">
             <span className="pb-1 text-[10px] normal-case tracking-normal text-muted-foreground">Preferences</span>
-            <button type="button" onClick={toggleMode} className="flex items-center py-2 text-left">
-              {mode === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-              {mode === 'dark' ? 'Light mode' : 'Dark mode'}
-            </button>
             <button
               type="button"
               onClick={() => {
@@ -305,7 +309,7 @@ export function Header() {
               type="button"
               onClick={() => {
                 setMobileOpen(false);
-                setAssistantOpen(true);
+                handleAssistantClick();
               }}
               className="flex items-center py-2 text-left"
             >
@@ -320,6 +324,9 @@ export function Header() {
                 <span className="pb-1 text-[11px] normal-case tracking-normal text-foreground">{user.name}</span>
                 <Link to="/account/orders" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
                   <Package className="mr-2 h-4 w-4" /> Orders
+                </Link>
+                <Link to="/account/designs" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
+                  <Sparkles className="mr-2 h-4 w-4" /> My Designs
                 </Link>
                 {user.role === 'admin' && (
                   <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
