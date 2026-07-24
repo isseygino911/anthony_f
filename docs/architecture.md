@@ -394,26 +394,22 @@ two branches, zero duplicated color logic (plan §6.4).
 
 ### 5.3 Dark / light / auto mode resolution
 
-Priority order, evaluated once per page load in `resolveMode.ts`:
+There is no user-facing toggle — mode is resolved solely from the
+admin-configured `site_theme.default_mode`, once per page load in
+`resolveMode.ts`:
 ```
-1. If cookie "theme_mode" is present (value "dark" or "light") -> use it directly.
-2. Else -> read site_theme.default_mode:
+1. Read site_theme.default_mode:
    a. if default_mode === 'light' -> use 'light'
    b. if default_mode === 'dark'  -> use 'dark'
    c. if default_mode === 'auto'  -> resolve via window.matchMedia('(prefers-color-scheme: dark)')
                                       to a concrete 'dark'/'light' value, ONCE (not re-evaluated
                                       on subsequent OS theme changes within the session)
-3. Set data-mode="<resolved>" on <html>.
-4. Do NOT write a cookie yet in step 2/c — the cookie is only written when the
-   user explicitly toggles via the header switch (plan: "auto resolves ... not
-   re-checked every load" describes the toggle's write, not an implicit write
-   on every anonymous load; writing on mere resolution would defeat the "no
-   cookie -> fall back to default_mode" branch on the very next request).
+2. Set data-mode="<resolved>" on <html>.
 ```
-The header toggle: on click, compute the new value, call
-`document.documentElement.setAttribute('data-mode', value)`, and set
-`document.cookie = "theme_mode=<value>; Max-Age=31536000; Path=/; SameSite=Lax"`
-directly client-side — no server round-trip (plan §6.5).
+No cookie is read or written as part of this resolution — the mode is
+derived fresh on every load from `default_mode` (and system preference when
+'auto'). Admins configure `default_mode` via `ThemeSettings.tsx`; end users
+cannot override it.
 
 Neutral surface/text CSS tokens (shadcn defaults, mode-aware via
 `data-mode`/Tailwind `dark:` variant) handle contrast; `--brand-primary`/
@@ -782,9 +778,7 @@ becomes a concern; not needed at current scale, so not built now).
   `SameSite=Lax`, `Secure` in production; the CSRF cookie is deliberately
   **not** `httpOnly` (client JS must read it to echo it back as a header).
 - **Anon session cookie** (`anon_session_id`) is `httpOnly`, long-lived,
-  `SameSite=Lax` — mirrors the `theme_mode` cookie's lax same-site posture
-  described in plan §6.5, but is not readable/writable by client JS (unlike
-  `theme_mode`, which must be, since the header toggle rewrites it directly).
+  `SameSite=Lax`, and not readable/writable by client JS.
 
 ---
 
