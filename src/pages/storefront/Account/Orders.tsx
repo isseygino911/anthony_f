@@ -99,9 +99,27 @@ export function Orders() {
                             </span>
                           </div>
                         ))}
-                        <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold">
-                          <span>Total</span>
-                          <span>{formatCurrency(detail.adjustedTotal ?? detail.total)}</span>
+                        <div className="mt-2 flex flex-col gap-1 border-t border-border/70 pt-2">
+                          <div className="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(detail.subtotal)}</span>
+                          </div>
+                          {detail.adjustment_total !== 0 && (
+                            <div className="flex justify-between">
+                              <span>Adjustments</span>
+                              <span>{formatCurrency(detail.adjustment_total)}</span>
+                            </div>
+                          )}
+                          {detail.tax_amount > 0 && (
+                            <div className="flex justify-between">
+                              <span>Tax ({detail.tax_rate_percent.toFixed(2)}%)</span>
+                              <span>{formatCurrency(detail.tax_amount)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between font-semibold">
+                            <span>Total</span>
+                            <span>{formatCurrency(detail.adjustedTotal ?? detail.total)}</span>
+                          </div>
                         </div>
                       </div>
 

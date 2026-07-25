@@ -177,6 +177,10 @@ export function OrderDetail() {
               <span>Adjustments</span>
               <span>{formatCurrency(order.adjustment_total)}</span>
             </div>
+            <div className="flex justify-between">
+              <span>Tax ({order.tax_rate_percent.toFixed(2)}%)</span>
+              <span>{formatCurrency(order.tax_amount)}</span>
+            </div>
             <div className="flex justify-between font-semibold">
               <span>Total</span>
               <span>{formatCurrency(order.total)}</span>

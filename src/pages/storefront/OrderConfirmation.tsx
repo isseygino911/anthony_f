@@ -76,9 +76,27 @@ export function OrderConfirmation() {
             <span>{formatCurrency(item.unit_price ? item.unit_price * (item.quantity ?? 1) : (item.amount ?? 0))}</span>
           </div>
         ))}
-        <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold">
-          <span>Total</span>
-          <span>{formatCurrency(order.adjustedTotal ?? order.total)}</span>
+        <div className="mt-2 flex flex-col gap-1 border-t border-border/70 pt-2 text-sm">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>{formatCurrency(order.subtotal)}</span>
+          </div>
+          {order.adjustment_total !== 0 && (
+            <div className="flex justify-between">
+              <span>Adjustments</span>
+              <span>{formatCurrency(order.adjustment_total)}</span>
+            </div>
+          )}
+          {order.tax_amount > 0 && (
+            <div className="flex justify-between">
+              <span>Tax ({order.tax_rate_percent.toFixed(2)}%)</span>
+              <span>{formatCurrency(order.tax_amount)}</span>
+            </div>
+          )}
+          <div className="flex justify-between font-semibold">
+            <span>Total</span>
+            <span>{formatCurrency(order.adjustedTotal ?? order.total)}</span>
+          </div>
         </div>
       </div>
 
