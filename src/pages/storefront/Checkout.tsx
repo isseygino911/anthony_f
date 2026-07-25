@@ -6,6 +6,7 @@ import { ErrorMessage } from '../../components/layout/AsyncState';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { Skeleton } from '../../components/ui/skeleton';
 import { useCart } from '../../hooks/useCart';
 import { formatCurrency } from '../../lib/utils';
 import type { ShippingAddress } from '../../types';
@@ -22,7 +23,7 @@ const EMPTY_ADDRESS: ShippingAddress = {
 };
 
 export function Checkout() {
-  const { cart, refresh } = useCart();
+  const { cart, loading: cartLoading, refresh } = useCart();
   const navigate = useNavigate();
   const [address, setAddress] = useState<ShippingAddress>(EMPTY_ADDRESS);
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +48,14 @@ export function Checkout() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (cartLoading && !payment) {
+    return (
+      <div className="container py-8">
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
   }
 
   if (cart.items.length === 0 && !payment) {
