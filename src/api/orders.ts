@@ -12,3 +12,7 @@ export function getMyOrders(query: { page?: number; pageSize?: number } = {}) {
 export function getMyOrder(id: number | string) {
   return api.get<Order>(`/orders/${id}`);
 }
+
+export function createPaymentIntent(orderId: number | string) {
+  return api.post<{ clientSecret: string }>(`/orders/${orderId}/create-payment-intent`);
+}
