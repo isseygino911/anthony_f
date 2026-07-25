@@ -16,3 +16,7 @@ export function getMyOrder(id: number | string) {
 export function createPaymentIntent(orderId: number | string) {
   return api.post<{ clientSecret: string }>(`/orders/${orderId}/create-payment-intent`);
 }
+
+export function cancelOrder(orderId: number | string) {
+  return api.delete<void>(`/orders/${orderId}`);
+}
