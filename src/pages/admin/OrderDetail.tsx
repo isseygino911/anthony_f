@@ -22,7 +22,7 @@ import type { AdminOrder, OrderStatus } from "../../types";
 
 const ADJUSTMENT_TYPES: { value: OrderAdjustmentType; label: string; disabled?: boolean }[] = [
   { value: "discount", label: "Discount" },
-  { value: "refund", label: "Refund (under construction)", disabled: true },
+  { value: "refund", label: "Refund (full, via Stripe)" },
   { value: "shipping_change", label: "Shipping change" },
   { value: "manual_adjustment", label: "Manual adjustment" },
   { value: "status_change", label: "Status change" },
@@ -34,7 +34,6 @@ const ORDER_STATUSES: OrderStatus[] = [
   "shipped",
   "delivered",
   "cancelled",
-  "refunded",
 ];
 
 export function OrderDetail() {
@@ -65,8 +64,7 @@ export function OrderDetail() {
   async function handleAdjust(e: FormEvent) {
     e.preventDefault();
     if (!order) return;
-    if (adjType === "refund") {
-      setFormError("Refund adjustments are temporarily disabled.");
+    if (adjType === "refund" && !window.confirm("Refund this order in full via Stripe? This cannot be undone.")) {
       return;
     }
     setSubmitting(true);
@@ -76,7 +74,7 @@ export function OrderDetail() {
         adjType === "discount" ? -Math.abs(Number(amount)) : Number(amount);
       await adjustOrder(order.id, {
         type: adjType,
-        amount: adjType !== "status_change" ? signedAmount : undefined,
+        amount: adjType !== "status_change" && adjType !== "refund" ? signedAmount : undefined,
         newStatus: adjType === "status_change" ? newStatus : undefined,
         reason: reason || undefined,
       });
@@ -230,6 +228,10 @@ export function OrderDetail() {
                 </SelectContent>
               </Select>
             </div>
+          ) : adjType === "refund" ? (
+            <p className="text-sm text-muted-foreground">
+              Refunds the full order total ({formatCurrency(order.total)}) via Stripe.
+            </p>
           ) : (
             <div className="space-y-1">
               <Label>
