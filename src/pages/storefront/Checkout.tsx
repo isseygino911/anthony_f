@@ -61,7 +61,11 @@ export function Checkout() {
   if (cart.items.length === 0 && !payment) {
     return (
       <div className="container py-8">
-        <ErrorMessage message="Your cart is empty — add items before checking out." />
+        <ErrorMessage
+          message={
+            error ?? 'Your cart is empty — add items before checking out.'
+          }
+        />
       </div>
     );
   }
