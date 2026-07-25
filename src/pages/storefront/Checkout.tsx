@@ -9,7 +9,7 @@ import { Label } from '../../components/ui/label';
 import { Skeleton } from '../../components/ui/skeleton';
 import { useCart } from '../../hooks/useCart';
 import { formatCurrency } from '../../lib/utils';
-import type { ShippingAddress } from '../../types';
+import type { Order, ShippingAddress } from '../../types';
 import { PaymentStep } from './PaymentStep';
 
 const EMPTY_ADDRESS: ShippingAddress = {
@@ -29,6 +29,7 @@ export function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<{ orderId: number; clientSecret: string } | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
 
   function update<K extends keyof ShippingAddress>(key: K, value: ShippingAddress[K]) {
     setAddress((prev) => ({ ...prev, [key]: value }));
@@ -42,6 +43,7 @@ export function Checkout() {
       const order = await createOrder(address);
       await refresh();
       const { clientSecret } = await createPaymentIntent(order.id);
+      setPlacedOrder(order);
       setPayment({ orderId: order.id, clientSecret });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to place order');
@@ -121,18 +123,40 @@ export function Checkout() {
 
       <div className="flex h-fit flex-col gap-3 rounded-md border border-border/70 bg-card p-6">
         <h2 className="font-display text-lg tracking-tight">Order summary</h2>
-        {cart.items.map((item) => (
-          <div key={item.productId} className="flex justify-between text-sm">
-            <span>
-              {item.name} &times; {item.quantity}
-            </span>
-            <span>{formatCurrency(item.price * item.quantity)}</span>
-          </div>
-        ))}
-        <div className="flex justify-between border-t border-border/70 pt-3 font-medium">
-          <span>Subtotal</span>
-          <span>{formatCurrency(cart.subtotal)}</span>
-        </div>
+        {placedOrder ? (
+          <>
+            {placedOrder.items.map((item) => (
+              <div key={item.id} className="flex justify-between text-sm">
+                <span>
+                  {item.label}
+                  {item.quantity ? ` × ${item.quantity}` : ''}
+                </span>
+                <span>
+                  {formatCurrency(item.unit_price ? item.unit_price * (item.quantity ?? 1) : (item.amount ?? 0))}
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between border-t border-border/70 pt-3 font-medium">
+              <span>Total</span>
+              <span>{formatCurrency(placedOrder.adjustedTotal ?? placedOrder.total)}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            {cart.items.map((item) => (
+              <div key={item.productId} className="flex justify-between text-sm">
+                <span>
+                  {item.name} &times; {item.quantity}
+                </span>
+                <span>{formatCurrency(item.price * item.quantity)}</span>
+              </div>
+            ))}
+            <div className="flex justify-between border-t border-border/70 pt-3 font-medium">
+              <span>Subtotal</span>
+              <span>{formatCurrency(cart.subtotal)}</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
