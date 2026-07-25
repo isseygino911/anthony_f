@@ -1,6 +1,6 @@
 import { contrastForeground, shiftLightness } from './colorUtils';
 
-export interface ResolvedColors {
+interface ResolvedColors {
   primary: string;
   secondary: string;
 }

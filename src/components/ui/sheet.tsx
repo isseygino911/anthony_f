@@ -6,11 +6,10 @@ import * as React from 'react';
 import { cn } from '../../lib/utils';
 
 export const Sheet = SheetPrimitive.Root;
-export const SheetTrigger = SheetPrimitive.Trigger;
 export const SheetClose = SheetPrimitive.Close;
-export const SheetPortal = SheetPrimitive.Portal;
+const SheetPortal = SheetPrimitive.Portal;
 
-export const SheetOverlay = React.forwardRef<
+const SheetOverlay = React.forwardRef<
   React.ComponentRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
@@ -81,11 +80,3 @@ export const SheetTitle = React.forwardRef<
   />
 ));
 SheetTitle.displayName = SheetPrimitive.Title.displayName;
-
-export const SheetDescription = React.forwardRef<
-  React.ComponentRef<typeof SheetPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Description ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
-));
-SheetDescription.displayName = SheetPrimitive.Description.displayName;

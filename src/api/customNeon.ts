@@ -10,7 +10,7 @@ export const NEON_SIZE_LABELS: Record<NeonSize, string> = {
   large: '36"x36"',
 };
 
-export interface CreateDesignInput {
+interface CreateDesignInput {
   designType: DesignType;
   file: File;
   strokes?: unknown;

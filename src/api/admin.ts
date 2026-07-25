@@ -1,7 +1,6 @@
 import { api, ApiError, API_BASE_URL } from './client';
 import type {
   AdminOrder,
-  Category,
   CustomNeonDesign,
   CustomNeonDesignStatus,
   CustomNeonUsageRow,
@@ -21,7 +20,7 @@ import type {
 
 // ---- Products ----
 
-export interface ProductInput {
+interface ProductInput {
   name: string;
   description?: string;
   price: number;
@@ -41,10 +40,6 @@ export function createProduct(input: ProductInput) {
 
 export function updateProduct(id: number, input: Partial<ProductInput>) {
   return api.put<Product>(`/admin/products/${id}`, input);
-}
-
-export function deleteProduct(id: number) {
-  return api.delete<void>(`/admin/products/${id}`);
 }
 
 export function bulkDeleteProducts(ids: number[]) {
@@ -81,28 +76,10 @@ export function getProductSeo(productId: number) {
   return api.get<ProductSeo>(`/admin/products/${productId}/seo`);
 }
 
-// ---- Categories ----
-
-export function createCategory(input: { name: string; slug: string }) {
-  return api.post<Category>('/admin/categories', input);
-}
-
-export function updateCategory(id: number, input: { name?: string; slug?: string }) {
-  return api.put<Category>(`/admin/categories/${id}`, input);
-}
-
-export function deleteCategory(id: number) {
-  return api.delete<void>(`/admin/categories/${id}`);
-}
-
 // ---- Groups ----
 
 export function createGroup(input: { name: string; description?: string }) {
   return api.post<ProductGroup>('/admin/groups', input);
-}
-
-export function updateGroup(id: number, input: { name?: string; description?: string }) {
-  return api.put<ProductGroup>(`/admin/groups/${id}`, input);
 }
 
 export function deleteGroup(id: number) {
@@ -115,7 +92,7 @@ export function replaceGroupProducts(groupId: number, productIds: number[]) {
 
 // ---- Orders ----
 
-export interface AdminOrderQuery {
+interface AdminOrderQuery {
   status?: OrderStatus;
   page?: number;
   pageSize?: number;
@@ -137,7 +114,7 @@ export type OrderAdjustmentType =
   | 'manual_adjustment'
   | 'status_change';
 
-export interface OrderAdjustmentInput {
+interface OrderAdjustmentInput {
   type: OrderAdjustmentType;
   amount?: number;
   newStatus?: OrderStatus;

@@ -61,7 +61,7 @@ function buildQueryString(query?: RequestOptions['query']): string {
   return qs ? `?${qs}` : '';
 }
 
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const method = (options.method ?? 'GET').toUpperCase();
   const headers: Record<string, string> = {};
   let body: BodyInit | undefined;

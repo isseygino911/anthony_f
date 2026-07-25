@@ -1,7 +1,7 @@
 import { api } from './client';
 import type { Category, Paginated, Product, ProductGroup } from '../types';
 
-export interface ProductQuery {
+interface ProductQuery {
   category?: string;
   group?: string;
   search?: string;

@@ -1,5 +1,5 @@
-export type ThemeMode = 'light' | 'dark';
-export type DefaultMode = ThemeMode | 'auto';
+type ThemeMode = 'light' | 'dark';
+type DefaultMode = ThemeMode | 'auto';
 
 /**
  * Resolves the effective light/dark mode once per page load, per

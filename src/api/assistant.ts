@@ -1,7 +1,7 @@
 import { api } from './client';
 import type { Product, DocumentResource } from '../types';
 
-export interface AssistantReply {
+interface AssistantReply {
   conversationId: number;
   reply: string;
   products: Product[];

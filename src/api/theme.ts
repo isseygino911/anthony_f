@@ -5,7 +5,7 @@ export function getTheme() {
   return api.get<ThemeResponse>('/theme');
 }
 
-export interface ThemeSaveInput {
+interface ThemeSaveInput {
   brand_name?: string;
   tagline?: string;
   logo_url?: string;

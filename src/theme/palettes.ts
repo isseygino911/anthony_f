@@ -35,7 +35,3 @@ export const PALETTES: Palette[] = [
 ];
 
 export const CUSTOM_PALETTE_ID = 'custom';
-
-export function getPaletteById(id: string): Palette | undefined {
-  return PALETTES.find((p) => p.id === id);
-}
