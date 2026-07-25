@@ -86,22 +86,51 @@ export function Orders() {
                 <div className="border-t border-border/70 p-5">
                   {!detail && <Skeleton className="h-16 w-full" />}
                   {detail && (
-                    <div className="flex flex-col gap-1 text-sm">
-                      {detail.items.map((item) => (
-                        <div key={item.id} className="flex justify-between">
-                          <span>
-                            {item.label}
-                            {item.quantity ? ` × ${item.quantity}` : ''}
-                          </span>
-                          <span>
-                            {formatCurrency(item.unit_price ? item.unit_price * (item.quantity ?? 1) : (item.amount ?? 0))}
-                          </span>
+                    <div className="flex flex-col gap-4 text-sm">
+                      <div className="flex flex-col gap-1">
+                        {detail.items.map((item) => (
+                          <div key={item.id} className="flex justify-between">
+                            <span>
+                              {item.label}
+                              {item.quantity ? ` × ${item.quantity}` : ''}
+                            </span>
+                            <span>
+                              {formatCurrency(item.unit_price ? item.unit_price * (item.quantity ?? 1) : (item.amount ?? 0))}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold">
+                          <span>Total</span>
+                          <span>{formatCurrency(detail.adjustedTotal ?? detail.total)}</span>
                         </div>
-                      ))}
-                      <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold">
-                        <span>Total</span>
-                        <span>{formatCurrency(detail.adjustedTotal ?? detail.total)}</span>
                       </div>
+
+                      {detail.shipping_address && (
+                        <div className="border-t border-border/70 pt-3">
+                          <div className="mb-1 font-medium">Shipping address</div>
+                          <div className="text-muted-foreground">
+                            <div>{detail.shipping_address.recipient_name}</div>
+                            <div>
+                              {detail.shipping_address.line1}
+                              {detail.shipping_address.line2 ? `, ${detail.shipping_address.line2}` : ''}
+                            </div>
+                            <div>
+                              {detail.shipping_address.city}, {detail.shipping_address.region}{' '}
+                              {detail.shipping_address.postal_code}
+                            </div>
+                            <div>{detail.shipping_address.country}</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {detail.stripe_payment_intent_id && (
+                        <div className="border-t border-border/70 pt-3">
+                          <div className="mb-1 font-medium">Payment</div>
+                          <div className="break-all text-muted-foreground">
+                            Transaction ID: {detail.stripe_payment_intent_id}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

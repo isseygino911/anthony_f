@@ -139,6 +139,7 @@ export interface Order extends OrderSummary {
   shipping_address: ShippingAddress;
   subtotal: number;
   adjustment_total: number;
+  stripe_payment_intent_id: string | null;
   items: OrderLineItem[];
   adjustedTotal?: number;
 }
