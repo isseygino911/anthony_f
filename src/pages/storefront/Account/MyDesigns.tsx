@@ -24,6 +24,22 @@ export function MyDesigns() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load designs'));
   }, []);
 
+  // While anything is still generating, poll so "Queued"/"Generating preview"
+  // flips to "Preview ready" (or "Failed") live, instead of requiring a
+  // manual page reload to notice.
+  useEffect(() => {
+    const hasActive = designs?.some((d) => d.status === 'pending' || d.status === 'processing');
+    if (!hasActive) return;
+    const interval = setInterval(() => {
+      listMyDesigns({ page: 1, pageSize: 50 })
+        .then((res) => setDesigns(res.items))
+        .catch(() => {
+          // transient poll failure — next tick will retry
+        });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [designs]);
+
   async function handleOrder(id: number) {
     setError(null);
     setOrderingId(id);

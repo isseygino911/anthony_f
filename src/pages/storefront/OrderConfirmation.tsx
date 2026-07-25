@@ -20,6 +20,28 @@ export function OrderConfirmation() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load order'));
   }, [id]);
 
+  // The order is created as pending_payment and only flips to processing once
+  // Stripe's webhook lands — which happens asynchronously, separate from the
+  // client's stripe.confirmPayment() call that brought the user to this page.
+  // Poll briefly so the page catches up once the webhook arrives, instead of
+  // permanently showing a stale "pending payment" from a one-time fetch.
+  useEffect(() => {
+    if (!id || !order || order.status !== 'pending_payment') return;
+    const startedAt = Date.now();
+    const interval = setInterval(() => {
+      if (Date.now() - startedAt > 30000) {
+        clearInterval(interval);
+        return;
+      }
+      getMyOrder(id)
+        .then(setOrder)
+        .catch(() => {
+          // transient poll failure — next tick will retry within the 30s cap
+        });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [id, order]);
+
   if (error) {
     return (
       <div className="container py-8">

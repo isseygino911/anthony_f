@@ -1,5 +1,6 @@
 import {
   Heart,
+  Loader2,
   LogOut,
   Menu,
   MessageCircle,
@@ -13,13 +14,14 @@ import {
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getActiveDesign } from '../../api/customNeon';
 import { getCategories, getGroups } from '../../api/products';
 import { AssistantDrawer } from '../assistant/AssistantDrawer';
 import { CartDrawer } from '../cart/CartDrawer';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
 import { useTheme } from '../../hooks/useTheme';
-import type { Category, ProductGroup } from '../../types';
+import type { Category, CustomNeonDesign, ProductGroup } from '../../types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +44,7 @@ export function Header() {
   const [cartOpen, setCartOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeDesign, setActiveDesign] = useState<CustomNeonDesign | null>(null);
 
   useEffect(() => {
     getCategories()
@@ -51,6 +54,33 @@ export function Header() {
       .then((res) => setGroups(res.items))
       .catch(() => setGroups([]));
   }, []);
+
+  // Site-wide "your neon preview is still generating" indicator — visible on
+  // every storefront page (not just /custom-neon or My Designs), so closing
+  // the tab or navigating away never leaves the user without a way to see
+  // that their generation is still in progress.
+  useEffect(() => {
+    if (!user) {
+      setActiveDesign(null);
+      return;
+    }
+    let cancelled = false;
+    function poll() {
+      getActiveDesign()
+        .then((res) => {
+          if (!cancelled) setActiveDesign(res.design);
+        })
+        .catch(() => {
+          // transient poll failure — next tick will retry
+        });
+    }
+    poll();
+    const interval = setInterval(poll, 8000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [user]);
 
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -173,6 +203,16 @@ export function Header() {
           >
             {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
           </Button>
+
+          {activeDesign && (
+            <Link
+              to={`/custom-neon?designId=${activeDesign.id}`}
+              className="hidden items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+            >
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />
+              Neon preview generating&hellip;
+            </Link>
+          )}
 
           <Button
             variant="ghost"

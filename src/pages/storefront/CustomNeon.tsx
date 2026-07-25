@@ -1,11 +1,12 @@
 import { Loader2, Pencil, RefreshCw, Sparkles, Type as TypeIcon, Upload } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   NEON_SIZE_LABELS,
   confirmDesign,
   createDesign,
+  getActiveDesign,
   getDesign,
   getShowcaseDesigns,
   regenerateDesign,
@@ -93,6 +94,7 @@ export function CustomNeon() {
   const navigate = useNavigate();
   const { refresh: refreshCart } = useCart();
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [mode, setMode] = useState<Mode>("upload");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -107,6 +109,47 @@ export function CustomNeon() {
   const [generating, setGenerating] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Keeps ?designId= in sync with the in-progress/finished design so a
+  // refresh (or sharing the URL) can reattach to it instead of losing it —
+  // generation itself is server-side and keeps running either way, this is
+  // purely about the client not losing its reference to it.
+  useEffect(() => {
+    if (design) {
+      setSearchParams({ designId: String(design.id) }, { replace: true });
+    }
+  }, [design, setSearchParams]);
+
+  // On mount: reattach to a design already in progress rather than showing a
+  // blank "Generate" form the user could accidentally resubmit into. Prefer
+  // the URL's designId (works even across a hard refresh); otherwise ask the
+  // API if this user already has one active (covers a fresh tab/no query
+  // param) — the server-side guard in createDesign/regenerate already blocks
+  // starting a second one regardless, this just makes the UI reflect that.
+  useEffect(() => {
+    const designId = searchParams.get("designId");
+    (async () => {
+      try {
+        if (designId) {
+          const found = await getDesign(Number(designId));
+          setDesign(found);
+          setSize(found.size ?? "small");
+          setNeonColor(found.neonColor ?? "amber");
+          return;
+        }
+        const { design: active } = await getActiveDesign();
+        if (active) {
+          setDesign(active);
+          setSize(active.size ?? "small");
+          setNeonColor(active.neonColor ?? "amber");
+        }
+      } catch {
+        // Unknown/foreign designId, or not logged in yet — fall back to a
+        // fresh "Generate" form rather than blocking the page.
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!design || (design.status !== "pending" && design.status !== "processing")) return;
@@ -160,7 +203,7 @@ export function CustomNeon() {
       });
       setDesign(created);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate preview");
+      setError(err instanceof ApiError ? err.message : "Failed to generate preview");
     } finally {
       setGenerating(false);
     }
@@ -332,8 +375,12 @@ export function CustomNeon() {
                 className="relative z-10 h-full w-full object-cover"
               />
             ) : isBusy ? (
-              <div className="relative z-10 flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+              <div className="relative z-10 flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-muted-foreground">
                 <Loader2 className="h-10 w-10 animate-spin text-brand" />
+                <p className="text-xs">
+                  This can take a minute — feel free to close this tab, your preview will keep generating and
+                  you'll find it under My Designs when it's ready.
+                </p>
               </div>
             ) : design?.status === "failed" ? (
               <div className="relative z-10 flex h-full items-center justify-center p-10 text-center text-muted-foreground">
@@ -484,9 +531,13 @@ export function CustomNeon() {
                   className="h-full w-full object-cover"
                 />
               ) : isBusy ? (
-                <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                <div className="flex flex-col items-center gap-3 px-12 text-center text-muted-foreground">
                   <Loader2 className="h-10 w-10 animate-spin text-brand" />
                   <p>Generating your neon preview&hellip;</p>
+                  <p className="text-xs">
+                    This can take a minute — feel free to close this tab, your preview will keep generating and
+                    you'll find it under My Designs when it's ready.
+                  </p>
                 </div>
               ) : design?.status === "failed" ? (
                 <p className="px-12 text-center text-muted-foreground">Generation failed &mdash; try again below.</p>

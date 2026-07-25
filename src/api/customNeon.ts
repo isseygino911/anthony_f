@@ -36,6 +36,13 @@ export function getDesign(id: number) {
   return api.get<CustomNeonDesign>(`/custom-neon-designs/${id}`);
 }
 
+// The current user's in-flight (pending/processing) design, if any — used to
+// reattach to a generation in progress after a refresh/new tab, and to power
+// the site-wide "generating" indicator.
+export function getActiveDesign() {
+  return api.get<{ design: CustomNeonDesign | null }>('/custom-neon-designs/active');
+}
+
 // "My Designs" account page — every design the current user has ever
 // generated, any status.
 export function listMyDesigns(query: { page?: number; pageSize?: number } = {}) {

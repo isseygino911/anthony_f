@@ -214,7 +214,7 @@ export interface CustomNeonDesign {
   designType: DesignType;
   inputPayload: CustomNeonDesignInputPayload;
   size: NeonSize | null;
-  neonColor: string | null;
+  neonColor: NeonColor | null;
   price: number | null;
   status: CustomNeonDesignStatus;
   attempts: number;
