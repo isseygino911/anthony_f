@@ -59,14 +59,7 @@ function App() {
                   <Route path="/resources" element={<Resources />} />
                   <Route path="/resources/:id" element={<ResourceDetail />} />
                   <Route path="/company-insights" element={<CompanyInsights />} />
-                  <Route
-                    path="/custom-neon"
-                    element={
-                      <RequireAuth>
-                        <CustomNeon />
-                      </RequireAuth>
-                    }
-                  />
+                  <Route path="/custom-neon" element={<CustomNeon />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
