@@ -54,9 +54,9 @@ export function ProductOptionsEditor({ groups, onChange }: ProductOptionsEditorP
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-medium">Option groups (controller, power supply, installation, etc.)</p>
-        <Button type="button" variant="outline" size="sm" onClick={addGroup}>
+        <Button type="button" variant="outline" size="sm" className="w-fit" onClick={addGroup}>
           <Plus className="h-4 w-4" /> Add group
         </Button>
       </div>
@@ -103,63 +103,68 @@ export function ProductOptionsEditor({ groups, onChange }: ProductOptionsEditorP
 
           <div className="flex flex-col gap-2 pl-2">
             {group.choices.map((choice, choiceIndex) => (
-              <div key={choiceIndex} className="flex items-center gap-2">
-                <Input
-                  className="flex-1"
-                  value={choice.key}
-                  onChange={(e) => updateChoice(groupIndex, choiceIndex, { key: e.target.value })}
-                  placeholder="key (e.g. motion_sensor)"
-                />
-                <Input
-                  className="flex-1"
-                  value={choice.label}
-                  onChange={(e) => updateChoice(groupIndex, choiceIndex, { label: e.target.value })}
-                  placeholder="Label (e.g. Motion sensor controller)"
-                />
-                <Input
-                  className="w-28"
-                  type="number"
-                  step="0.01"
-                  value={choice.priceDelta}
-                  onChange={(e) => updateChoice(groupIndex, choiceIndex, { priceDelta: Number(e.target.value) })}
-                  placeholder="+$"
-                />
-                <Input
-                  className="w-24"
-                  type="number"
-                  min="0"
-                  value={choice.extra?.wattageCapacity ?? ''}
-                  onChange={(e) =>
-                    updateChoice(groupIndex, choiceIndex, {
-                      extra: {
-                        ...choice.extra,
-                        wattageCapacity: e.target.value ? Number(e.target.value) : undefined,
-                      },
-                    })
-                  }
-                  placeholder="Watts"
-                  title="Max wattage this choice can support (leave blank if not a power supply)"
-                />
-                <label className="flex items-center gap-1 text-xs text-muted-foreground" title="One-time fee, not multiplied by quantity (e.g. installation)">
-                  <Checkbox
-                    checked={Boolean(choice.extra?.isFlatFee)}
-                    onCheckedChange={(checked) =>
+              <div key={choiceIndex} className="flex flex-col gap-2 rounded-md border p-2 sm:flex-row sm:items-center sm:rounded-none sm:border-0 sm:p-0">
+                <div className="flex gap-2">
+                  <Input
+                    className="flex-1"
+                    value={choice.key}
+                    onChange={(e) => updateChoice(groupIndex, choiceIndex, { key: e.target.value })}
+                    placeholder="key (e.g. motion_sensor)"
+                  />
+                  <Input
+                    className="flex-1"
+                    value={choice.label}
+                    onChange={(e) => updateChoice(groupIndex, choiceIndex, { label: e.target.value })}
+                    placeholder="Label (e.g. Motion sensor controller)"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    className="w-20 sm:w-28"
+                    type="number"
+                    step="0.01"
+                    value={choice.priceDelta}
+                    onChange={(e) => updateChoice(groupIndex, choiceIndex, { priceDelta: Number(e.target.value) })}
+                    placeholder="+$"
+                  />
+                  <Input
+                    className="w-20 sm:w-24"
+                    type="number"
+                    min="0"
+                    value={choice.extra?.wattageCapacity ?? ''}
+                    onChange={(e) =>
                       updateChoice(groupIndex, choiceIndex, {
-                        extra: { ...choice.extra, isFlatFee: Boolean(checked) },
+                        extra: {
+                          ...choice.extra,
+                          wattageCapacity: e.target.value ? Number(e.target.value) : undefined,
+                        },
                       })
                     }
+                    placeholder="Watts"
+                    title="Max wattage this choice can support (leave blank if not a power supply)"
                   />
-                  Flat fee
-                </label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeChoice(groupIndex, choiceIndex)}
-                  aria-label="Remove choice"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                  <label className="flex flex-1 items-center gap-1 text-xs text-muted-foreground sm:flex-none" title="One-time fee, not multiplied by quantity (e.g. installation)">
+                    <Checkbox
+                      checked={Boolean(choice.extra?.isFlatFee)}
+                      onCheckedChange={(checked) =>
+                        updateChoice(groupIndex, choiceIndex, {
+                          extra: { ...choice.extra, isFlatFee: Boolean(checked) },
+                        })
+                      }
+                    />
+                    Flat fee
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => removeChoice(groupIndex, choiceIndex)}
+                    aria-label="Remove choice"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
             <Button type="button" variant="ghost" size="sm" onClick={() => addChoice(groupIndex)} className="w-fit">

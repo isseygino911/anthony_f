@@ -83,7 +83,7 @@ export function Categories() {
   }
 
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Categories</h1>
@@ -201,15 +201,19 @@ function CategoryRow({
   if (editing) {
     return (
       <div className="flex flex-col gap-2 rounded-lg border p-3">
-        <div className="flex items-center gap-2">
-          <Input value={name} onChange={(e) => setName(e.target.value)} className="flex-1" aria-label="Name" />
-          <Input value={slug} onChange={(e) => setSlug(e.target.value)} className="flex-1" aria-label="Slug" />
-          <Button size="icon" onClick={handleSave} disabled={saving} aria-label="Save">
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setEditing(false)} aria-label="Cancel">
-            <X className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex gap-2">
+            <Input value={name} onChange={(e) => setName(e.target.value)} className="flex-1" aria-label="Name" />
+            <Input value={slug} onChange={(e) => setSlug(e.target.value)} className="flex-1" aria-label="Slug" />
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <Button size="icon" onClick={handleSave} disabled={saving} aria-label="Save">
+              <Check className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setEditing(false)} aria-label="Cancel">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         {rowError && <ErrorMessage message={rowError} />}
       </div>

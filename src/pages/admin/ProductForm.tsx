@@ -242,7 +242,7 @@ export function ProductForm() {
   if (loading) return <p className="text-muted-foreground">Loading...</p>;
 
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <h1 className="text-2xl font-semibold">{isNew ? 'New product' : 'Edit product'}</h1>
 
       <div className="rounded-lg border bg-muted/40 p-4 text-sm">
