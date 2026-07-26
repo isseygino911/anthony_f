@@ -29,6 +29,59 @@ export interface Product {
   images?: ProductImage[];
   groupIds?: number[];
   deleted_at?: string | null;
+  // Configurable-product pricing (server/src/services/pricingFormulas). Null
+  // for plain flat-price products — presence of this field is how the client
+  // decides whether to render the size/options configurator.
+  pricing_config?: PricingConfig | null;
+}
+
+// formulaType is a closed set implemented server-side
+// (server/src/services/pricingFormulas/) — the client never evaluates a
+// formula itself, only sends {sizeInches, selectedOptions} and displays
+// whatever price the server computes (mirrors the order-total rule:
+// price is only ever derived server-side, architecture.md §0).
+export interface PricingConfig {
+  formulaType: 'linear_per_unit' | 'flat';
+  params: {
+    basePrice: number;
+    unitSizeInches?: number;
+    pricePerExtraUnit?: number;
+    wattsPerUnit?: number;
+  };
+}
+
+export interface ProductOptionChoice {
+  id: number;
+  key: string;
+  label: string;
+  priceDelta: number;
+  extra: { wattageCapacity?: number; isFlatFee?: boolean } | null;
+  sortOrder: number;
+}
+
+export interface ProductOptionGroup {
+  id: number;
+  key: string;
+  label: string;
+  type: 'single_select' | 'multi_select';
+  sortOrder: number;
+  choices: ProductOptionChoice[];
+}
+
+export interface SelectedOptionChoice {
+  groupKey: string;
+  groupLabel: string;
+  choiceKey: string;
+  choiceLabel: string;
+  priceDelta: number;
+  isFlatFee: boolean;
+}
+
+export interface SelectedOptionsSnapshot {
+  sizeInches: number | null;
+  totalWatts: number;
+  choices: SelectedOptionChoice[];
+  flatFeeDelta: number;
 }
 
 export type ProductSeoStatus = 'pending' | 'processing' | 'ready' | 'needs_review' | 'failed';
@@ -80,11 +133,16 @@ export interface Paginated<T> {
 }
 
 export interface CartItem {
+  cartId: number;
   productId: number;
   name: string;
   price: number;
   quantity: number;
   imageUrl: string | null;
+  // Configurable-product fields — null/undefined for plain products.
+  selectedOptions?: SelectedOptionsSnapshot | null;
+  sizeInches?: number | null;
+  flatFeeTotal?: number;
 }
 
 export interface Cart {

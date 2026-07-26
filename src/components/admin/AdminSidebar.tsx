@@ -1,4 +1,4 @@
-import { Bell, FileText, Lightbulb, LayoutDashboard, Mail, Package, Palette, Receipt, Shapes, Sparkles, Users } from 'lucide-react';
+import { Bell, FileText, FolderTree, Lightbulb, LayoutDashboard, Mail, Package, Palette, Receipt, Shapes, Sparkles, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
@@ -28,6 +28,7 @@ const navGroups: NavGroup[] = [
     label: 'Catalog & sales',
     items: [
       { to: '/admin/products', label: 'Products', icon: Package },
+      { to: '/admin/categories', label: 'Categories', icon: FolderTree },
       { to: '/admin/groups', label: 'Groups', icon: Shapes },
       { to: '/admin/orders', label: 'Orders', icon: Receipt },
       { to: '/admin/custom-neon-designs', label: 'Custom Neon', icon: Lightbulb },

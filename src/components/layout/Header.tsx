@@ -1,4 +1,5 @@
 import {
+  ChevronDown,
   Heart,
   Loader2,
   LogOut,
@@ -12,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getActiveDesign } from '../../api/customNeon';
 import { getCategories, getGroups } from '../../api/products';
@@ -21,6 +22,7 @@ import { CartDrawer } from '../cart/CartDrawer';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
 import { useTheme } from '../../hooks/useTheme';
+import { cn } from '../../lib/utils';
 import type { Category, CustomNeonDesign, ProductGroup } from '../../types';
 import {
   DropdownMenu,
@@ -31,6 +33,84 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Button } from '../ui/button';
+
+function ProductsNavMenu({ categories, groups }: { categories: Category[]; groups: ProductGroup[] }) {
+  const [open, setOpen] = useState(false);
+  const closeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function openNow() {
+    if (closeTimeout.current) clearTimeout(closeTimeout.current);
+    setOpen(true);
+  }
+
+  function closeSoon() {
+    if (closeTimeout.current) clearTimeout(closeTimeout.current);
+    closeTimeout.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  if (categories.length === 0 && groups.length === 0) {
+    return (
+      <Link to="/products" className="transition-colors hover:text-brand">
+        Products
+      </Link>
+    );
+  }
+
+  return (
+    <div className="relative" onMouseEnter={openNow} onMouseLeave={closeSoon}>
+      <Link
+        to="/products"
+        className="flex items-center gap-1 transition-colors hover:text-brand"
+        aria-haspopup="true"
+        aria-expanded={open}
+      >
+        Products
+        <ChevronDown className="h-3 w-3" />
+      </Link>
+      <div
+        className={cn(
+          'absolute left-1/2 top-full z-50 w-64 -translate-x-1/2 pt-3 transition-all duration-150',
+          open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1 opacity-0',
+        )}
+      >
+        <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-popover p-4 normal-case tracking-normal text-popover-foreground shadow-lg">
+          {categories.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <span className="px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Categories
+              </span>
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/category/${cat.slug}`}
+                  className="rounded-md px-2 py-1.5 text-sm font-normal transition-colors hover:bg-muted hover:text-brand"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          )}
+          {groups.length > 0 && (
+            <div className="flex flex-col gap-1 border-t border-border/70 pt-3">
+              <span className="px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Collections
+              </span>
+              {groups.map((group) => (
+                <Link
+                  key={group.id}
+                  to={`/group/${group.id}`}
+                  className="rounded-md px-2 py-1.5 text-sm font-normal transition-colors hover:bg-muted hover:text-brand"
+                >
+                  {group.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Header() {
   const { theme } = useTheme();
@@ -151,16 +231,7 @@ export function Header() {
           <Link to="/company-insights" className="transition-colors hover:text-brand">
             Company
           </Link>
-          {categories.map((cat) => (
-            <Link key={cat.id} to={`/category/${cat.slug}`} className="transition-colors hover:text-brand">
-              {cat.name}
-            </Link>
-          ))}
-          {groups.map((group) => (
-            <Link key={group.id} to={`/group/${group.id}`} className="transition-colors hover:text-brand">
-              {group.name}
-            </Link>
-          ))}
+          <ProductsNavMenu categories={categories} groups={groups} />
           <Link to="/custom-neon" className="transition-colors hover:text-brand">
             Custom Neon
           </Link>
@@ -319,16 +390,25 @@ export function Header() {
           <Link to="/company-insights" onClick={() => setMobileOpen(false)}>
             Company
           </Link>
-          {categories.map((cat) => (
-            <Link key={cat.id} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)}>
-              {cat.name}
+          <div className="flex flex-col gap-2">
+            <Link to="/products" onClick={() => setMobileOpen(false)}>
+              Products
             </Link>
-          ))}
-          {groups.map((group) => (
-            <Link key={group.id} to={`/group/${group.id}`} onClick={() => setMobileOpen(false)}>
-              {group.name}
-            </Link>
-          ))}
+            {(categories.length > 0 || groups.length > 0) && (
+              <div className="flex flex-col gap-2 border-l border-border/70 pl-3 normal-case tracking-normal text-muted-foreground">
+                {categories.map((cat) => (
+                  <Link key={cat.id} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)} className="text-xs">
+                    {cat.name}
+                  </Link>
+                ))}
+                {groups.map((group) => (
+                  <Link key={group.id} to={`/group/${group.id}`} onClick={() => setMobileOpen(false)} className="text-xs">
+                    {group.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           <Link to="/custom-neon" onClick={() => setMobileOpen(false)}>
             Custom Neon
           </Link>

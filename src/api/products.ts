@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Category, Paginated, Product, ProductGroup } from '../types';
+import type { Category, Paginated, Product, ProductGroup, ProductOptionGroup } from '../types';
 
 interface ProductQuery {
   category?: string;
@@ -36,4 +36,23 @@ export function getGroupProducts(
   query: { page?: number; pageSize?: number; includeInactive?: boolean } = {},
 ) {
   return api.get<Paginated<Product>>(`/groups/${groupId}/products`, { ...query });
+}
+
+// Configurable-product option groups/choices (public read — storefront
+// product detail page needs this to render the size/options configurator).
+export function getProductOptions(productId: number | string) {
+  return api.get<{ groups: ProductOptionGroup[] }>(`/products/${productId}/options`);
+}
+
+// Server-computed price preview for a candidate selection, before
+// add-to-cart — never compute this client-side (pricing.service.js is the
+// single source of truth, mirrors architecture.md §0's order-total rule).
+export function previewProductPrice(
+  productId: number | string,
+  input: { sizeInches?: number; selectedOptions?: Record<string, string> },
+) {
+  return api.post<{ unitPrice: number; flatFeeDelta: number; totalWatts: number }>(
+    `/products/${productId}/price-preview`,
+    input,
+  );
 }

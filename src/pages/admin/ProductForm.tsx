@@ -8,12 +8,15 @@ import {
   getProductSeo,
   replaceProductGroups,
   setPrimaryImage,
+  setProductOptions,
   updateProduct,
   uploadProductImages,
 } from '../../api/admin';
+import type { ProductOptionGroupInput } from '../../api/admin';
 import { ApiError } from '../../api/client';
-import { getCategories, getGroups, getProduct } from '../../api/products';
+import { getCategories, getGroups, getProduct, getProductOptions } from '../../api/products';
 import { ErrorMessage } from '../../components/layout/AsyncState';
+import { ProductOptionsEditor } from '../../components/admin/ProductOptionsEditor';
 import { SeoStatusBadge } from '../../components/product/SeoStatusBadge';
 import { Button } from '../../components/ui/button';
 import { Checkbox } from '../../components/ui/checkbox';
@@ -22,7 +25,7 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
 import { Textarea } from '../../components/ui/textarea';
-import type { Category, Product, ProductGroup, ProductImage, ProductSeo } from '../../types';
+import type { Category, PricingConfig, Product, ProductGroup, ProductImage, ProductSeo } from '../../types';
 
 interface FormState {
   name: string;
@@ -69,6 +72,16 @@ export function ProductForm() {
   const [productSeo, setProductSeo] = useState<ProductSeo | null>(null);
   const [seoLoading, setSeoLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Configurable pricing (server/src/services/pricingFormulas). isConfigurable
+  // toggles whether pricingConfig/optionGroups are sent at all — a product
+  // that never opts in stays a plain flat-price product, unchanged.
+  const [isConfigurable, setIsConfigurable] = useState(false);
+  const [pricingConfig, setPricingConfig] = useState<PricingConfig>({
+    formulaType: 'linear_per_unit',
+    params: { basePrice: 35, unitSizeInches: 12, pricePerExtraUnit: 25, wattsPerUnit: 4 },
+  });
+  const [optionGroups, setOptionGroups] = useState<ProductOptionGroupInput[]>([]);
 
   const refreshSeo = useCallback(async (id: number) => {
     setSeoLoading(true);
@@ -117,10 +130,37 @@ export function ProductForm() {
         setImages(product.images ?? []);
         setSelectedGroups(new Set(product.groupIds ?? []));
         setProductId(product.id);
+        if (product.pricing_config) {
+          setIsConfigurable(true);
+          setPricingConfig(product.pricing_config);
+        }
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load product'))
       .finally(() => setLoading(false));
   }, [id, isNew]);
+
+  useEffect(() => {
+    if (isNew || !productId) return;
+    getProductOptions(productId)
+      .then((res) => {
+        setOptionGroups(
+          res.groups.map((g) => ({
+            key: g.key,
+            label: g.label,
+            type: g.type,
+            sortOrder: g.sortOrder,
+            choices: g.choices.map((c) => ({
+              key: c.key,
+              label: c.label,
+              priceDelta: c.priceDelta,
+              extra: c.extra,
+              sortOrder: c.sortOrder,
+            })),
+          })),
+        );
+      })
+      .catch(() => setOptionGroups([]));
+  }, [productId, isNew]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -155,6 +195,7 @@ export function ProductForm() {
         is_clearance: form.is_clearance,
         stock_quantity: Number(form.stock_quantity),
         low_stock_threshold: form.low_stock_threshold ? Number(form.low_stock_threshold) : null,
+        pricing_config: isConfigurable ? pricingConfig : null,
       };
 
       let savedId = productId;
@@ -168,6 +209,7 @@ export function ProductForm() {
 
       if (savedId) {
         await replaceProductGroups(savedId, Array.from(selectedGroups));
+        await setProductOptions(savedId, isConfigurable ? optionGroups : []);
       }
 
       navigate('/admin/products');
@@ -291,6 +333,87 @@ export function ProductForm() {
               onChange={(e) => update('low_stock_threshold', e.target.value)}
             />
           </FormField>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Configurable pricing</p>
+              <p className="text-xs text-muted-foreground">
+                Price by size/length instead of a fixed price. When enabled, &quot;Price&quot; above is ignored and
+                the price shown to customers is computed from the formula below plus any option add-ons.
+              </p>
+            </div>
+            <Switch checked={isConfigurable} onCheckedChange={setIsConfigurable} />
+          </div>
+
+          {isConfigurable && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Base price (covers first unit)">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={pricingConfig.params.basePrice}
+                    onChange={(e) =>
+                      setPricingConfig((prev) => ({
+                        ...prev,
+                        params: { ...prev.params, basePrice: Number(e.target.value) },
+                      }))
+                    }
+                  />
+                </FormField>
+                <FormField label="Unit size (inches)">
+                  <Input
+                    type="number"
+                    min="1"
+                    value={pricingConfig.params.unitSizeInches ?? ''}
+                    onChange={(e) =>
+                      setPricingConfig((prev) => ({
+                        ...prev,
+                        params: { ...prev.params, unitSizeInches: Number(e.target.value) },
+                      }))
+                    }
+                  />
+                </FormField>
+                <FormField label="Price per extra unit">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={pricingConfig.params.pricePerExtraUnit ?? ''}
+                    onChange={(e) =>
+                      setPricingConfig((prev) => ({
+                        ...prev,
+                        params: { ...prev.params, pricePerExtraUnit: Number(e.target.value) },
+                      }))
+                    }
+                  />
+                </FormField>
+                <FormField label="Watts per unit">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={pricingConfig.params.wattsPerUnit ?? ''}
+                    onChange={(e) =>
+                      setPricingConfig((prev) => ({
+                        ...prev,
+                        params: { ...prev.params, wattsPerUnit: Number(e.target.value) },
+                      }))
+                    }
+                  />
+                </FormField>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Example: base $35, unit 12&quot;, +$25/extra unit, 4W/unit means a 24&quot; item costs $60 and
+                draws an estimated 8W.
+              </p>
+
+              <ProductOptionsEditor groups={optionGroups} onChange={setOptionGroups} />
+            </>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 rounded-lg border p-4">

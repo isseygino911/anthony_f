@@ -8,6 +8,7 @@ import { AssistantProvider } from './hooks/useAssistant';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { FavoritesProvider } from './hooks/useFavorites';
+import { Categories } from './pages/admin/Categories';
 import { CustomNeonDesignDetail } from './pages/admin/CustomNeonDesignDetail';
 import { CustomNeonDesigns } from './pages/admin/CustomNeonDesigns';
 import { CustomNeonUsage } from './pages/admin/CustomNeonUsage';
@@ -123,6 +124,7 @@ function App() {
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="products/new" element={<ProductForm />} />
                   <Route path="products/:id" element={<ProductForm />} />
+                  <Route path="categories" element={<Categories />} />
                   <Route path="groups" element={<Groups />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="orders/:id" element={<OrderDetail />} />

@@ -1,6 +1,7 @@
 import { api, ApiError, API_BASE_URL } from './client';
 import type {
   AdminOrder,
+  Category,
   CustomNeonDesign,
   CustomNeonDesignStatus,
   CustomNeonUsageRow,
@@ -11,12 +12,29 @@ import type {
   OrderStatus,
   OrderSummary,
   Paginated,
+  PricingConfig,
   Product,
   ProductGroup,
   ProductImage,
+  ProductOptionGroup,
   ProductSeo,
   RevenuePoint,
 } from '../types';
+
+// ---- Categories ----
+
+export function createCategory(input: { name: string; slug: string }) {
+  return api.post<Category>('/admin/categories', input);
+}
+
+export function updateCategory(id: number, input: { name?: string; slug?: string }) {
+  return api.put<Category>(`/admin/categories/${id}`, input);
+}
+
+// 409 if the category still has products assigned — surfaced via ApiError.status.
+export function deleteCategory(id: number) {
+  return api.delete<void>(`/admin/categories/${id}`);
+}
 
 // ---- Products ----
 
@@ -32,6 +50,7 @@ interface ProductInput {
   is_clearance?: boolean;
   stock_quantity: number;
   low_stock_threshold?: number | null;
+  pricing_config?: PricingConfig | null;
 }
 
 export function createProduct(input: ProductInput) {
@@ -68,6 +87,27 @@ export function deleteProductImage(productId: number, imageId: number) {
 
 export function replaceProductGroups(productId: number, groupIds: number[]) {
   return api.put<{ groupIds: number[] }>(`/admin/products/${productId}/groups`, { groupIds });
+}
+
+// Full-replace, matching replaceProductGroups' pattern — the admin submits
+// the complete desired option-group list each save (server.
+// productOptions.service.js deletes and reinserts in one transaction).
+export interface ProductOptionGroupInput {
+  key: string;
+  label: string;
+  type: 'single_select' | 'multi_select';
+  sortOrder?: number;
+  choices: {
+    key: string;
+    label: string;
+    priceDelta: number;
+    extra?: { wattageCapacity?: number; isFlatFee?: boolean } | null;
+    sortOrder?: number;
+  }[];
+}
+
+export function setProductOptions(productId: number, groups: ProductOptionGroupInput[]) {
+  return api.put<{ groups: ProductOptionGroup[] }>(`/admin/products/${productId}/options`, { groups });
 }
 
 // Generated asynchronously by the seo-geo-agent worker after a product is

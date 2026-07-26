@@ -12,7 +12,7 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
-  const { cart, updateItem, removeItem } = useCart();
+  const { cart, updateLine, removeLine } = useCart();
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -39,10 +39,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             <div className="flex-1 overflow-y-auto px-6">
               {cart.items.map((item) => (
                 <DrawerLineItem
-                  key={item.productId}
+                  key={item.cartId}
                   item={item}
-                  onUpdateQuantity={(qty) => updateItem(item.productId, qty)}
-                  onRemove={() => removeItem(item.productId)}
+                  onUpdateQuantity={(qty) => updateLine(item.cartId, qty)}
+                  onRemove={() => removeLine(item.cartId)}
                 />
               ))}
             </div>
@@ -96,6 +96,15 @@ function DrawerLineItem({ item, onUpdateQuantity, onRemove }: DrawerLineItemProp
           </button>
         </div>
         <p className="text-xs text-muted-foreground">{formatCurrency(item.price)} each</p>
+        {item.selectedOptions && (
+          <p className="text-xs text-muted-foreground">
+            {item.sizeInches != null && `${item.sizeInches}" `}
+            {item.selectedOptions.choices
+              .filter((c) => !c.isFlatFee)
+              .map((c) => c.choiceLabel)
+              .join(', ')}
+          </p>
+        )}
         <div className="mt-1 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <button
@@ -114,7 +123,9 @@ function DrawerLineItem({ item, onUpdateQuantity, onRemove }: DrawerLineItemProp
               <Plus className="h-3 w-3" />
             </button>
           </div>
-          <p className="text-sm font-medium">{formatCurrency(item.price * item.quantity)}</p>
+          <p className="text-sm font-medium">
+            {formatCurrency(item.price * item.quantity + (item.flatFeeTotal ?? 0))}
+          </p>
         </div>
       </div>
     </div>

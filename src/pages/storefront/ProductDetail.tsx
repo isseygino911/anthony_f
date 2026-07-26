@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getProduct } from '../../api/products';
 import { ErrorMessage } from '../../components/layout/AsyncState';
 import { Gallery } from '../../components/product/Gallery';
+import { ProductConfigurator } from '../../components/product/ProductConfigurator';
 import { StockBadge } from '../../components/product/StockBadge';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -63,9 +64,16 @@ export function ProductDetail() {
   }
 
   const isFavorited = favoriteIds.has(product.id);
+  const isConfigurable = Boolean(product.pricing_config);
 
   async function handleAddToCart() {
     await addItem(product!.id, quantity);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  }
+
+  async function handleAddConfiguredToCart(selections: { sizeInches?: number; selectedOptions: Record<string, string> }) {
+    await addItem(product!.id, quantity, selections);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }
@@ -92,29 +100,43 @@ export function ProductDetail() {
 
         {product.stockStatus && <StockBadge status={product.stockStatus} />}
 
-        <p className="font-display text-2xl text-brand">{formatCurrency(product.price)}</p>
+        {!isConfigurable && <p className="font-display text-2xl text-brand">{formatCurrency(product.price)}</p>}
 
         {product.description && <p className="leading-relaxed text-muted-foreground">{product.description}</p>}
 
-        <div className="flex items-center gap-3 pt-2">
-          <label htmlFor="qty" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Quantity
-          </label>
-          <input
-            id="qty"
-            type="number"
-            min={1}
-            value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="h-11 w-20 rounded-md border border-input bg-background px-3 text-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
-            disabled={outOfStock}
+        {isConfigurable ? (
+          <ProductConfigurator
+            product={product}
+            quantity={quantity}
+            onQuantityChange={setQuantity}
+            outOfStock={outOfStock}
+            added={added}
+            onAddToCart={handleAddConfiguredToCart}
           />
-        </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3 pt-2">
+              <label htmlFor="qty" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Quantity
+              </label>
+              <input
+                id="qty"
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                className="h-11 w-20 rounded-md border border-input bg-background px-3 text-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand"
+                disabled={outOfStock}
+              />
+            </div>
+
+            <Button onClick={handleAddToCart} disabled={outOfStock} size="lg" className="flex-1">
+              <ShoppingCart className="h-4 w-4" /> {added ? 'Added!' : 'Add to cart'}
+            </Button>
+          </>
+        )}
 
         <div className="flex gap-3 pt-2">
-          <Button onClick={handleAddToCart} disabled={outOfStock} size="lg" className="flex-1">
-            <ShoppingCart className="h-4 w-4" /> {added ? 'Added!' : 'Add to cart'}
-          </Button>
           <Button variant="outline" size="icon" onClick={handleFavoriteClick} aria-label="Toggle favorite">
             <Heart className={cn('h-5 w-5', isFavorited && 'fill-brand text-brand')} />
           </Button>

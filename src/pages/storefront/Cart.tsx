@@ -8,7 +8,7 @@ import { useCart } from '../../hooks/useCart';
 import { formatCurrency } from '../../lib/utils';
 
 export function CartPage() {
-  const { cart, loading, error, updateItem, removeItem } = useCart();
+  const { cart, loading, error, updateLine, removeLine } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -39,10 +39,10 @@ export function CartPage() {
           <div className="lg:col-span-2">
             {cart.items.map((item) => (
               <CartLineItem
-                key={item.productId}
+                key={item.cartId}
                 item={item}
-                onUpdateQuantity={(qty) => updateItem(item.productId, qty)}
-                onRemove={() => removeItem(item.productId)}
+                onUpdateQuantity={(qty) => updateLine(item.cartId, qty)}
+                onRemove={() => removeLine(item.cartId)}
               />
             ))}
           </div>
