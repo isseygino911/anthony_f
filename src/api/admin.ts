@@ -101,7 +101,11 @@ export interface ProductOptionGroupInput {
     key: string;
     label: string;
     priceDelta: number;
-    extra?: { wattageCapacity?: number; isFlatFee?: boolean } | null;
+    // Beyond wattageCapacity/isFlatFee, any numeric attribute here is exposed
+    // to custom pricing formulas as `<groupKey>_<attr>`.
+    extra?:
+      | ({ wattageCapacity?: number; isFlatFee?: boolean } & Record<string, number | boolean | undefined>)
+      | null;
     sortOrder?: number;
   }[];
 }

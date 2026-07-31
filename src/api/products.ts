@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Category, Paginated, Product, ProductGroup, ProductOptionGroup } from '../types';
+import type { Category, Paginated, PricingConfig, Product, ProductGroup, ProductOptionGroup } from '../types';
 
 interface ProductQuery {
   category?: string;
@@ -47,9 +47,16 @@ export function getProductOptions(productId: number | string) {
 // Server-computed price preview for a candidate selection, before
 // add-to-cart — never compute this client-side (pricing.service.js is the
 // single source of truth, mirrors architecture.md §0's order-total rule).
+// pricingConfigOverride is admin-only (rejected with 403 otherwise): it lets
+// the formula builder preview an unsaved draft through this same endpoint,
+// rather than approximating the price client-side.
 export function previewProductPrice(
   productId: number | string,
-  input: { sizeInches?: number; selectedOptions?: Record<string, string> },
+  input: {
+    sizeInches?: number;
+    selectedOptions?: Record<string, string>;
+    pricingConfigOverride?: PricingConfig | null;
+  },
 ) {
   return api.post<{ unitPrice: number; flatFeeDelta: number; totalWatts: number }>(
     `/products/${productId}/price-preview`,

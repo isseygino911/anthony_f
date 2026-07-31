@@ -35,18 +35,32 @@ export interface Product {
   pricing_config?: PricingConfig | null;
 }
 
-// formulaType is a closed set implemented server-side
-// (server/src/services/pricingFormulas/) — the client never evaluates a
-// formula itself, only sends {sizeInches, selectedOptions} and displays
-// whatever price the server computes (mirrors the order-total rule:
-// price is only ever derived server-side, architecture.md §0).
+// 'linear_per_unit' and 'flat' are fixed shapes implemented server-side
+// (anthony_b/src/services/pricingFormulas/); 'custom' carries admin-authored
+// expressions in `formula`. Either way the client never evaluates a formula to
+// produce a price — it sends {sizeInches, selectedOptions} and displays
+// whatever the server computes (mirrors the order-total rule: price is only
+// ever derived server-side, architecture.md §0). src/lib/formulaExpression.ts
+// parses expressions for the admin editor's chips and syntax errors only.
 export interface PricingConfig {
-  formulaType: 'linear_per_unit' | 'flat';
+  formulaType: 'linear_per_unit' | 'flat' | 'custom';
   params: {
-    basePrice: number;
+    basePrice?: number;
     unitSizeInches?: number;
     pricePerExtraUnit?: number;
     wattsPerUnit?: number;
+    // custom only
+    constants?: Record<string, number>;
+    minSizeInches?: number;
+    // Phase 2: expression per option-group key deciding how many of that
+    // component the configured size requires.
+    autoQuantity?: Record<string, string>;
+  };
+  // Required when formulaType is 'custom'. `watts` is optional; omitted means
+  // a load of 0, which disables power-supply capacity gating.
+  formula?: {
+    price: string;
+    watts?: string;
   };
 }
 
@@ -55,7 +69,10 @@ export interface ProductOptionChoice {
   key: string;
   label: string;
   priceDelta: number;
-  extra: { wattageCapacity?: number; isFlatFee?: boolean } | null;
+  // wattageCapacity and isFlatFee are read directly by the pricing service;
+  // any other numeric attribute is exposed to custom formulas as
+  // `<groupKey>_<attr>`.
+  extra: ({ wattageCapacity?: number; isFlatFee?: boolean } & Record<string, number | boolean | undefined>) | null;
   sortOrder: number;
 }
 

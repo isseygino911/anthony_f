@@ -14,8 +14,9 @@ import {
 } from '../../api/admin';
 import type { ProductOptionGroupInput } from '../../api/admin';
 import { ApiError } from '../../api/client';
-import { getCategories, getGroups, getProduct, getProductOptions } from '../../api/products';
+import { getCategories, getGroups, getProduct, getProductOptions, previewProductPrice } from '../../api/products';
 import { ErrorMessage } from '../../components/layout/AsyncState';
+import { FormulaBuilder } from '../../components/admin/FormulaBuilder';
 import { ProductOptionsEditor } from '../../components/admin/ProductOptionsEditor';
 import { SeoStatusBadge } from '../../components/product/SeoStatusBadge';
 import { Button } from '../../components/ui/button';
@@ -82,6 +83,42 @@ export function ProductForm() {
     params: { basePrice: 35, unitSizeInches: 12, pricePerExtraUnit: 25, wattsPerUnit: 4 },
   });
   const [optionGroups, setOptionGroups] = useState<ProductOptionGroupInput[]>([]);
+
+  // Switching type keeps whatever params the other shapes need, so toggling
+  // back and forth doesn't silently lose the admin's numbers.
+  function setFormulaType(formulaType: PricingConfig['formulaType']) {
+    setPricingConfig((prev) => ({
+      ...prev,
+      formulaType,
+      formula: formulaType === 'custom' ? (prev.formula ?? { price: '' }) : prev.formula,
+    }));
+  }
+
+  // Prefills the canvas with the expression equivalent of the current
+  // per-unit params. Backend tests assert these two expressions reproduce
+  // linear_per_unit exactly, so converting a live product does not change
+  // what customers are charged.
+  function convertToCustomFormula() {
+    const { basePrice = 0, unitSizeInches = 12, pricePerExtraUnit = 0, wattsPerUnit = 0 } = pricingConfig.params;
+    setPricingConfig({
+      formulaType: 'custom',
+      params: {
+        ...pricingConfig.params,
+        minSizeInches: unitSizeInches,
+        constants: {
+          ...(pricingConfig.params.constants ?? {}),
+          basePrice,
+          unitSize: unitSizeInches,
+          perExtra: pricePerExtraUnit,
+          wattsPerUnit,
+        },
+      },
+      formula: {
+        price: 'basePrice + max(0, ceil(sizeInches / unitSize) - 1) * perExtra',
+        watts: 'ceil(sizeInches / unitSize) * wattsPerUnit',
+      },
+    });
+  }
 
   const refreshSeo = useCallback(async (id: number) => {
     setSeoLoading(true);
@@ -203,13 +240,15 @@ export function ProductForm() {
         const created = await createProduct(payload);
         savedId = created.id;
         setProductId(created.id);
-      } else {
-        await updateProduct(productId!, payload);
-      }
-
-      if (savedId) {
         await replaceProductGroups(savedId, Array.from(selectedGroups));
         await setProductOptions(savedId, isConfigurable ? optionGroups : []);
+      } else {
+        // Options go first: a custom formula may reference option groups by
+        // key, and the server validates those names against the groups the
+        // product actually has persisted.
+        await replaceProductGroups(productId!, Array.from(selectedGroups));
+        await setProductOptions(productId!, isConfigurable ? optionGroups : []);
+        await updateProduct(productId!, payload);
       }
 
       navigate('/admin/products');
@@ -349,6 +388,108 @@ export function ProductForm() {
 
           {isConfigurable && (
             <>
+              <FormField label="Pricing formula">
+                <Select
+                  value={pricingConfig.formulaType}
+                  onValueChange={(v) => setFormulaType(v as PricingConfig['formulaType'])}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="linear_per_unit">Per-unit (simple)</SelectItem>
+                    <SelectItem value="flat">Flat price</SelectItem>
+                    <SelectItem value="custom">Custom formula</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+
+              {pricingConfig.formulaType === 'flat' && (
+                <FormField label="Base price">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={pricingConfig.params.basePrice ?? ''}
+                    onChange={(e) =>
+                      setPricingConfig((prev) => ({
+                        ...prev,
+                        params: { ...prev.params, basePrice: Number(e.target.value) },
+                      }))
+                    }
+                  />
+                </FormField>
+              )}
+
+              {pricingConfig.formulaType === 'custom' && (
+                <>
+                  <div className="flex flex-wrap items-end gap-3">
+                    <FormField label="Minimum size (inches)">
+                      <Input
+                        className="w-32"
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={pricingConfig.params.minSizeInches ?? ''}
+                        onChange={(e) =>
+                          setPricingConfig((prev) => ({
+                            ...prev,
+                            params: {
+                              ...prev.params,
+                              minSizeInches: e.target.value ? Number(e.target.value) : undefined,
+                            },
+                          }))
+                        }
+                      />
+                    </FormField>
+                    <p className="pb-2 text-xs text-muted-foreground">
+                      Leave blank if this product has no size input.
+                    </p>
+                  </div>
+
+                  <FormulaBuilder
+                    label="Price formula"
+                    description="Produces the base price. Option add-ons the customer selects are added on top automatically."
+                    value={pricingConfig.formula?.price ?? ''}
+                    onChange={(price) =>
+                      setPricingConfig((prev) => ({
+                        ...prev,
+                        formula: { ...prev.formula, price },
+                      }))
+                    }
+                    optionGroups={optionGroups}
+                    constants={pricingConfig.params.constants ?? {}}
+                    onConstantsChange={(constants) =>
+                      setPricingConfig((prev) => ({ ...prev, params: { ...prev.params, constants } }))
+                    }
+                  />
+
+                  <FormulaBuilder
+                    label="Wattage formula (optional)"
+                    description="Estimated electrical load. Used to stop a customer picking a power supply that cannot carry it. Leave empty to disable that check."
+                    value={pricingConfig.formula?.watts ?? ''}
+                    onChange={(watts) =>
+                      setPricingConfig((prev) => ({
+                        ...prev,
+                        formula: { price: prev.formula?.price ?? '', watts: watts || undefined },
+                      }))
+                    }
+                    optionGroups={optionGroups}
+                    constants={pricingConfig.params.constants ?? {}}
+                    onConstantsChange={(constants) =>
+                      setPricingConfig((prev) => ({ ...prev, params: { ...prev.params, constants } }))
+                    }
+                  />
+
+                  <FormulaPreview
+                    productId={productId}
+                    pricingConfig={pricingConfig}
+                    optionGroups={optionGroups}
+                  />
+                </>
+              )}
+
+              {pricingConfig.formulaType === 'linear_per_unit' && (
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Base price (covers first unit)">
                   <Input
@@ -406,10 +547,19 @@ export function ProductForm() {
                   />
                 </FormField>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Example: base $35, unit 12&quot;, +$25/extra unit, 4W/unit means a 24&quot; item costs $60 and
-                draws an estimated 8W.
-              </p>
+              )}
+
+              {pricingConfig.formulaType === 'linear_per_unit' && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Example: base $35, unit 12&quot;, +$25/extra unit, 4W/unit means a 24&quot; item costs $60 and
+                    draws an estimated 8W.
+                  </p>
+                  <Button type="button" variant="outline" size="sm" onClick={convertToCustomFormula}>
+                    Convert to custom formula
+                  </Button>
+                </div>
+              )}
 
               <ProductOptionsEditor groups={optionGroups} onChange={setOptionGroups} />
             </>
@@ -568,6 +718,120 @@ function SeoPanel({
 
       {seo?.status === 'failed' && seo.lastError && (
         <p className="text-sm text-destructive">Last error: {seo.lastError}</p>
+      )}
+    </div>
+  );
+}
+
+// Prices a draft formula through the same endpoint (and therefore the same
+// server-side math) that charges customers, rather than approximating it here.
+// Needs a saved product because the server resolves the product's option
+// groups from the database to build the formula's variables.
+function FormulaPreview({
+  productId,
+  pricingConfig,
+  optionGroups,
+}: {
+  productId: number | null;
+  pricingConfig: PricingConfig;
+  optionGroups: ProductOptionGroupInput[];
+}) {
+  const [sizeInches, setSizeInches] = useState('24');
+  const [selected, setSelected] = useState<Record<string, string>>({});
+  const [result, setResult] = useState<{ unitPrice: number; flatFeeDelta: number; totalWatts: number } | null>(
+    null,
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  const priceFormula = pricingConfig.formula?.price ?? '';
+  const wattsFormula = pricingConfig.formula?.watts ?? '';
+  const selectedKey = JSON.stringify(selected);
+
+  useEffect(() => {
+    if (!productId || priceFormula.trim() === '') {
+      setResult(null);
+      return undefined;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const preview = await previewProductPrice(productId, {
+          sizeInches: sizeInches ? Number(sizeInches) : undefined,
+          selectedOptions: selected,
+          pricingConfigOverride: pricingConfig,
+        });
+        setResult(preview);
+        setError(null);
+      } catch (err) {
+        setResult(null);
+        setError(err instanceof Error ? err.message : 'Preview failed');
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+    // pricingConfig is a fresh object each render, so depend on its meaningful parts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId, priceFormula, wattsFormula, sizeInches, selectedKey]);
+
+  if (!productId) {
+    return (
+      <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+        Save the product to preview pricing.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-md border bg-muted/20 p-3">
+      <p className="text-sm font-medium">Preview</p>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Size (inches)</Label>
+          <Input
+            className="w-24"
+            type="number"
+            step="any"
+            value={sizeInches}
+            onChange={(e) => setSizeInches(e.target.value)}
+          />
+        </div>
+        {optionGroups
+          .filter((group) => group.key && group.choices.length > 0)
+          .map((group) => (
+            <div key={group.key} className="space-y-1">
+              <Label className="text-xs">{group.label || group.key}</Label>
+              <Select
+                value={selected[group.key] ?? ''}
+                onValueChange={(v) => setSelected((prev) => ({ ...prev, [group.key]: v }))}
+              >
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Not selected" />
+                </SelectTrigger>
+                <SelectContent>
+                  {group.choices
+                    .filter((choice) => choice.key)
+                    .map((choice) => (
+                      <SelectItem key={choice.key} value={choice.key}>
+                        {choice.label || choice.key}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+      </div>
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {result && (
+        <div className="grid gap-1 text-sm sm:grid-cols-3">
+          <p>
+            Per unit: <span className="font-medium">${result.unitPrice.toFixed(2)}</span>
+          </p>
+          <p>
+            One-time fees: <span className="font-medium">${result.flatFeeDelta.toFixed(2)}</span>
+          </p>
+          <p>
+            Estimated load: <span className="font-medium">{result.totalWatts}W</span>
+          </p>
+        </div>
       )}
     </div>
   );

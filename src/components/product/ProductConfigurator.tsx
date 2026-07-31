@@ -28,7 +28,11 @@ export function ProductConfigurator({
   added,
   onAddToCart,
 }: ProductConfiguratorProps) {
-  const minSize = product.pricing_config?.params.unitSizeInches ?? 1;
+  // Custom formulas carry minSizeInches; the per-unit shape derives its
+  // minimum from the unit size. The server enforces both — this only keeps the
+  // input's min in step with it.
+  const params = product.pricing_config?.params;
+  const minSize = params?.minSizeInches ?? params?.unitSizeInches ?? 1;
   const [groups, setGroups] = useState<ProductOptionGroup[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
   const [sizeInches, setSizeInches] = useState(minSize);

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import type { ProductOptionGroupInput } from '../../api/admin';
 import { Button } from '../ui/button';
@@ -165,6 +166,12 @@ export function ProductOptionsEditor({ groups, onChange }: ProductOptionsEditorP
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
+
+                <ChoiceAttributes
+                  groupKey={group.key}
+                  extra={choice.extra ?? null}
+                  onChange={(extra) => updateChoice(groupIndex, choiceIndex, { extra })}
+                />
               </div>
             ))}
             <Button type="button" variant="ghost" size="sm" onClick={() => addChoice(groupIndex)} className="w-fit">
@@ -173,6 +180,84 @@ export function ProductOptionsEditor({ groups, onChange }: ProductOptionsEditorP
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+type ChoiceExtra = NonNullable<ProductOptionGroupInput['choices'][number]['extra']>;
+
+// wattageCapacity and isFlatFee have dedicated inputs above because the pricing
+// service reads them directly. Any other numeric attribute added here becomes a
+// `<groupKey>_<attr>` variable usable in a custom pricing formula.
+const RESERVED_ATTRS = ['wattageCapacity', 'isFlatFee'];
+
+function ChoiceAttributes({
+  groupKey,
+  extra,
+  onChange,
+}: {
+  groupKey: string;
+  extra: ChoiceExtra | null;
+  onChange: (extra: ChoiceExtra) => void;
+}) {
+  const [name, setName] = useState('');
+  const [value, setValue] = useState('');
+
+  const custom = Object.entries(extra ?? {}).filter(
+    ([key, val]) => !RESERVED_ATTRS.includes(key) && typeof val === 'number',
+  );
+
+  function addAttribute() {
+    const trimmed = name.trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(trimmed)) return;
+    onChange({ ...(extra ?? {}), [trimmed]: Number(value) || 0 });
+    setName('');
+    setValue('');
+  }
+
+  function removeAttribute(key: string) {
+    const next = { ...(extra ?? {}) };
+    delete next[key];
+    onChange(next);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 pl-1">
+      {custom.map(([key, val]) => (
+        <span
+          key={key}
+          className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs"
+          title={`Usable in a formula as ${groupKey || 'group'}_${key}`}
+        >
+          {key} = {String(val)}
+          <button
+            type="button"
+            onClick={() => removeAttribute(key)}
+            className="text-muted-foreground hover:text-destructive"
+            aria-label={`Remove attribute ${key}`}
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+      <Input
+        className="h-7 w-28 text-xs"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="attribute"
+        title="Extra numeric attribute for custom pricing formulas (e.g. ledDensity)"
+      />
+      <Input
+        className="h-7 w-20 text-xs"
+        type="number"
+        step="any"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="value"
+      />
+      <Button type="button" variant="ghost" size="sm" className="h-7" onClick={addAttribute}>
+        <Plus className="h-3 w-3" /> Attribute
+      </Button>
     </div>
   );
 }
