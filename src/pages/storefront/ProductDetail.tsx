@@ -130,7 +130,7 @@ export function ProductDetail() {
               />
             </div>
 
-            <Button onClick={handleAddToCart} disabled={outOfStock} size="lg" className="flex-1">
+            <Button onClick={handleAddToCart} disabled={outOfStock} size="lg" className="w-full">
               <ShoppingCart className="h-4 w-4" /> {added ? 'Added!' : 'Add to cart'}
             </Button>
           </>
