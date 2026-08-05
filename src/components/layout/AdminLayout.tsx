@@ -23,7 +23,7 @@ export function AdminLayout() {
           <Menu className="h-5 w-5" />
         </Button>
         <Link to="/admin" className="min-w-0 truncate font-semibold">
-          {theme?.brand_name ?? 'Storefront'} Admin
+          {theme?.brand_name ?? 'Lumination Sign'} Admin
         </Link>
         <div className="ml-auto flex items-center gap-3">
           <NotificationBell />

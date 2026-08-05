@@ -21,7 +21,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-20 md:grid-cols-4">
           <div className="col-span-1 space-y-8 md:col-span-2">
             <h2 className="font-display text-2xl uppercase tracking-[0.4em] text-brand">
-              {theme?.brand_name ?? 'Storefront'}
+              {theme?.brand_name ?? 'Lumination Sign'}
             </h2>
             <p className="max-w-sm text-muted-foreground">
               A boutique light studio dedicated to the craft of neon. Based in the heart of the creative district,
@@ -82,7 +82,7 @@ export function Footer() {
             <h4 className="font-label text-xs uppercase tracking-widest text-foreground">Newsletter</h4>
             <NewsletterForm />
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              &copy; {new Date().getFullYear()} {theme?.brand_name ?? 'Storefront'} Studio
+              &copy; {new Date().getFullYear()} {theme?.brand_name ?? 'Lumination Sign'} Studio
             </p>
           </div>
         </div>

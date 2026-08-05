@@ -4,7 +4,7 @@
  *    VITE_API_URL unset/empty this is a same-origin relative path (Vite dev
  *    proxy forwards /api/* to :4002, Caddy does the same in same-domain
  *    production setups); with VITE_API_URL set to an absolute origin (e.g.
- *    https://anthony-api.isseylab.com) requests go fully cross-origin, and
+ *    https://api.luminationsign.store) requests go fully cross-origin, and
  *    rely on the backend's CORS config plus credentialed-cookie support to
  *    keep auth working
  *  - cookies (JWT / anon session / CSRF) via `credentials: 'include'`

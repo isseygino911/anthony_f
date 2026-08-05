@@ -211,14 +211,14 @@ export function Header() {
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur">
       <div className="container grid h-16 grid-cols-[auto_1fr_auto] items-center gap-4">
         <Link to="/" className="flex items-center gap-2 font-display text-xl uppercase tracking-tight">
-          {theme?.logo_url ? (
+          {/* {theme?.logo_url ? (
             <img src={theme.logo_url} alt={theme.brand_name} className="h-8 w-8 object-contain" />
           ) : (
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-sm text-brand-foreground">
               {(theme?.brand_name ?? 'S').charAt(0)}
             </span>
-          )}
-          <span>{theme?.brand_name ?? 'Storefront'}</span>
+          )} */}
+          <span>{theme?.brand_name ?? 'Lumination Sign'}</span>
         </Link>
 
         <nav className="hidden items-center justify-center gap-7 text-xs font-medium uppercase tracking-[0.12em] md:flex">
