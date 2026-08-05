@@ -305,7 +305,8 @@ export interface CustomNeonDesign {
 }
 
 export interface CustomNeonUsageRow {
-  userId: number;
+  // null is the aggregate row for anonymous (signed-out) generations.
+  userId: number | null;
   userEmail: string | null;
   userName: string | null;
   designCount: number;

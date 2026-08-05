@@ -4,6 +4,7 @@ import type { ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   NEON_SIZE_LABELS,
+  NEON_SIZE_PRICES,
   confirmDesign,
   createDesign,
   getActiveDesign,
@@ -34,11 +35,9 @@ const MODES: { value: Mode; label: string; icon: typeof Upload }[] = [
   { value: "text", label: "Type Text", icon: TypeIcon },
 ];
 
-const SIZE_OPTIONS: { value: NeonSize; label: string; price: number }[] = [
-  { value: "small", label: NEON_SIZE_LABELS.small, price: 249.99 },
-  { value: "medium", label: NEON_SIZE_LABELS.medium, price: 399.99 },
-  { value: "large", label: NEON_SIZE_LABELS.large, price: 524.99 },
-];
+const SIZE_OPTIONS: { value: NeonSize; label: string; price: number }[] = (
+  ["small", "medium", "large"] as const
+).map((value) => ({ value, label: NEON_SIZE_LABELS[value], price: NEON_SIZE_PRICES[value] }));
 
 const COLOR_OPTIONS: { value: NeonColor; label: string; swatch: string }[] = [
   { value: "amber", label: "Amber", swatch: "#f5b400" },

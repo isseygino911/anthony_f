@@ -47,7 +47,7 @@ export function CustomNeonDesigns() {
                   <TableHead>Size / Color</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Order</TableHead>
+                  <TableHead>Product</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -73,10 +73,18 @@ export function CustomNeonDesigns() {
                     <TableCell>
                       <DesignStatusBadge status={design.status} />
                     </TableCell>
+                    {/* A design only has a product_id once a customer confirmed
+                        it into an order. Everything else that has a usable
+                        preview can still be published as a catalog product by
+                        an admin, regardless of who generated it. */}
                     <TableCell>
                       {design.productId ? (
                         <Button variant="ghost" size="sm" asChild>
                           <Link to={`/admin/products/${design.productId}`}>Product</Link>
+                        </Button>
+                      ) : design.status === 'ready' && design.generatedImageUrl ? (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/admin/products/new?designId=${design.id}`}>Create product</Link>
                         </Button>
                       ) : (
                         '—'

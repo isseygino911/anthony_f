@@ -249,6 +249,22 @@ export function getAdminCustomNeonUsage(query: { page?: number; pageSize?: numbe
   return api.get<Paginated<CustomNeonUsageRow>>('/admin/custom-neon-usage', { ...query });
 }
 
+export interface CreateProductFromDesignInput {
+  name: string;
+  description?: string | null;
+  price: number;
+  category_id: number;
+  is_active?: boolean;
+}
+
+// Publishes a design as a real catalog product. Separate from createProduct
+// because the server has to attach the design's image itself — the normal
+// image endpoint takes uploaded File objects, and here the bytes already
+// live in S3.
+export function createProductFromDesign(designId: number, input: CreateProductFromDesignInput) {
+  return api.post<Product>(`/admin/custom-neon-designs/${designId}/product`, input);
+}
+
 // ---- Newsletter ----
 
 export interface NewsletterSubscriber {

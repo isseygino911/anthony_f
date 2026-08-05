@@ -1,10 +1,12 @@
 import { RefreshCw, Star, Trash2, Upload } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   createProduct,
+  createProductFromDesign,
   deleteProductImage,
+  getAdminCustomNeonDesign,
   getProductSeo,
   replaceProductGroups,
   setPrimaryImage,
@@ -14,6 +16,7 @@ import {
 } from '../../api/admin';
 import type { ProductOptionGroupInput } from '../../api/admin';
 import { ApiError } from '../../api/client';
+import { NEON_SIZE_LABELS, NEON_SIZE_PRICES } from '../../api/customNeon';
 import { getCategories, getGroups, getProduct, getProductOptions, previewProductPrice } from '../../api/products';
 import { ErrorMessage } from '../../components/layout/AsyncState';
 import { FormulaBuilder } from '../../components/admin/FormulaBuilder';
@@ -60,6 +63,15 @@ export function ProductForm() {
   const { id } = useParams<{ id: string }>();
   const isNew = !id || id === 'new';
   const navigate = useNavigate();
+
+  // Set when arriving from the Custom Neon Designs page's "Create product"
+  // button. The design's image already lives in S3, and the image endpoint
+  // below only accepts uploaded File objects — so publishing goes through a
+  // dedicated server route that attaches the image itself.
+  const [searchParams] = useSearchParams();
+  const designIdParam = searchParams.get('designId');
+  const designId = isNew && designIdParam ? Number(designIdParam) : null;
+  const [designPreviewUrl, setDesignPreviewUrl] = useState<string | null>(null);
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -146,6 +158,28 @@ export function ProductForm() {
       .then((res) => setGroups(res.items))
       .catch(() => setGroups([]));
   }, []);
+
+  // Prefill from the design so a straightforward publish needs no typing.
+  // Everything stays editable — this becomes a real catalog listing, not the
+  // hidden per-order product the customer confirm flow creates.
+  useEffect(() => {
+    if (!designId) return;
+    getAdminCustomNeonDesign(designId)
+      .then((design) => {
+        const dimensions = design.size ? NEON_SIZE_LABELS[design.size] : null;
+        setDesignPreviewUrl(design.generatedImageUrl);
+        setForm((prev) => ({
+          ...prev,
+          name: `Custom Neon Design #${design.id}`,
+          description: dimensions
+            ? `Custom AI-generated neon sign design (${dimensions}, ${design.neonColor}).`
+            : prev.description,
+          price: String(design.price ?? (design.size ? NEON_SIZE_PRICES[design.size] : '')),
+          sku: `NEON-PUB-${design.id}`,
+        }));
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load design'));
+  }, [designId]);
 
   useEffect(() => {
     if (isNew) return;
@@ -236,7 +270,21 @@ export function ProductForm() {
       };
 
       let savedId = productId;
-      if (isNew) {
+      if (designId) {
+        // Server-side create: it copies the design's S3 image onto the new
+        // product, which the normal create + upload-images pair can't do.
+        const created = await createProductFromDesign(designId, {
+          name: payload.name,
+          description: payload.description ?? null,
+          price: payload.price,
+          category_id: payload.category_id,
+        });
+        savedId = created.id;
+        setProductId(created.id);
+        await replaceProductGroups(savedId, Array.from(selectedGroups));
+        await setProductOptions(savedId, isConfigurable ? optionGroups : []);
+        if (isConfigurable) await updateProduct(savedId, payload);
+      } else if (isNew) {
         const created = await createProduct(payload);
         savedId = created.id;
         setProductId(created.id);
@@ -282,7 +330,30 @@ export function ProductForm() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">{isNew ? 'New product' : 'Edit product'}</h1>
+      <h1 className="text-2xl font-semibold">
+        {designId ? 'Publish design as product' : isNew ? 'New product' : 'Edit product'}
+      </h1>
+
+      {designId && (
+        <div className="flex items-center gap-4 rounded-lg border p-4">
+          {designPreviewUrl ? (
+            <img
+              src={designPreviewUrl}
+              alt="Custom neon design preview"
+              className="h-24 w-24 rounded-md border object-contain"
+            />
+          ) : (
+            <div className="h-24 w-24 rounded-md border bg-muted" />
+          )}
+          <div className="text-sm">
+            <p className="font-medium">Custom neon design #{designId}</p>
+            <p className="text-muted-foreground">
+              This image is attached to the product automatically when you save. The design keeps its own
+              copy, so the two are independent from here on.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-lg border bg-muted/40 p-4 text-sm">
         <p className="font-medium">Writing tips for better SEO / GEO results</p>
@@ -589,7 +660,11 @@ export function ProductForm() {
         <div className="flex flex-col gap-3 rounded-lg border p-4">
           <p className="font-medium">Images</p>
           {!productId && (
-            <p className="text-sm text-muted-foreground">Save the product first to upload images.</p>
+            <p className="text-sm text-muted-foreground">
+              {designId
+                ? 'The design preview is attached on save. You can add more images afterwards.'
+                : 'Save the product first to upload images.'}
+            </p>
           )}
           {productId && (
             <>

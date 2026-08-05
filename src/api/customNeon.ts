@@ -10,6 +10,15 @@ export const NEON_SIZE_LABELS: Record<NeonSize, string> = {
   large: '36"x36"',
 };
 
+// Mirrors SIZE_PRICES in server/src/services/customNeonDesign.service.js.
+// The server is authoritative for what a customer is actually charged; these
+// are for display and for prefilling the admin publish form.
+export const NEON_SIZE_PRICES: Record<NeonSize, number> = {
+  small: 249.99,
+  medium: 399.99,
+  large: 524.99,
+};
+
 interface CreateDesignInput {
   designType: DesignType;
   file: File;
