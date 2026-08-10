@@ -65,7 +65,21 @@ export interface ShowcaseDesign {
   imageUrl: string;
 }
 
-// Public — no auth required. Used by the landing page gallery.
+// Studio example work, shown permanently rather than as a fallback — these are
+// what the galleries are *for*, and they no longer get swapped out when
+// customer designs load. Admin-promoted designs live in their own section
+// instead (see CommunityCreations in pages/storefront/CustomNeon.tsx).
+// Negative ids keep them from colliding with real design ids in React keys.
+export const EXAMPLE_DESIGNS: ShowcaseDesign[] = [
+  { id: -1, label: 'Eevee outline · cyan', dimensions: '12"x12"', imageUrl: '/assets/neon-gallery-1.png' },
+  { id: -2, label: 'Jigglypuff outline · pink', dimensions: '24"x24"', imageUrl: '/assets/neon-gallery-2.png' },
+  { id: -3, label: 'Gengar outline · purple', dimensions: '36"x36"', imageUrl: '/assets/neon-gallery-3.png' },
+  { id: -4, label: 'Charmander outline · orange', dimensions: '24"x24"', imageUrl: '/assets/neon-gallery-4.png' },
+  { id: -5, label: 'Pikachu outline · yellow', dimensions: '12"x12"', imageUrl: '/assets/neon-gallery-5.png' },
+];
+
+// Public — no auth required. Returns only admin-promoted (is_showcased)
+// designs, so an empty list is the normal state before any curation.
 export function getShowcaseDesigns(limit = 10) {
   return api.get<{ items: ShowcaseDesign[] }>('/custom-neon-designs/showcase', { limit });
 }

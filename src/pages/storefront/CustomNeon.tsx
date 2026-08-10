@@ -10,6 +10,7 @@ import {
   getActiveDesign,
   getDesign,
   getShowcaseDesigns,
+  EXAMPLE_DESIGNS,
   type ShowcaseDesign,
 } from "../../api/customNeon";
 import { ApiError } from "../../api/client";
@@ -59,15 +60,6 @@ const FONT_OPTIONS = [
   { value: '"Caveat", cursive', label: "Caveat" },
   { value: '"Great Vibes", cursive', label: "Great Vibes" },
   { value: '"Permanent Marker", cursive', label: "Permanent Marker" },
-];
-
-// Shown until the real community designs load (or if that fetch fails).
-const FALLBACK_COMMUNITY: ShowcaseDesign[] = [
-  { id: -1, label: "Eevee outline · cyan", dimensions: '12"x12"', imageUrl: "/assets/neon-gallery-1.png" },
-  { id: -2, label: "Jigglypuff outline · pink", dimensions: '24"x24"', imageUrl: "/assets/neon-gallery-2.png" },
-  { id: -3, label: "Gengar outline · purple", dimensions: '36"x36"', imageUrl: "/assets/neon-gallery-3.png" },
-  { id: -4, label: "Charmander outline · orange", dimensions: '24"x24"', imageUrl: "/assets/neon-gallery-4.png" },
-  { id: -5, label: "Pikachu outline · yellow", dimensions: '12"x12"', imageUrl: "/assets/neon-gallery-5.png" },
 ];
 
 const POLL_INTERVAL_MS = 3000;
@@ -410,7 +402,7 @@ export function CustomNeon() {
         </p>
       </section>
 
-      <CommunityCreations />
+      <ExampleCreations />
 
       {/* Configuration — mobile (segmented tabs, floating preview controls, sticky bottom bar) */}
       <div className="lg:hidden">
@@ -911,49 +903,89 @@ export function CustomNeon() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CommunityCreations />
     </div>
   );
 }
 
+function ShowcaseCard({ item }: { item: ShowcaseDesign }) {
+  return (
+    <div className="community-card w-72 flex-none snap-start sm:w-80">
+      <div className="group overflow-hidden rounded-xl border border-border bg-card/60 backdrop-blur-xl">
+        <div className="relative aspect-square">
+          <img src={item.imageUrl} alt={item.label} className="h-full w-full object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="rounded-full bg-brand px-4 py-2 text-sm font-bold text-brand-foreground">
+              Inspired?
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <span className="font-semibold text-foreground">{item.label}</span>
+          {item.dimensions && <span className="text-sm text-muted-foreground">{item.dimensions}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Fixed studio examples — always rendered, never replaced by customer work.
+function ExampleCreations() {
+  const headRef = useScrollReveal<HTMLDivElement>();
+  const trackRef = useStaggerReveal<HTMLDivElement>(".community-card");
+
+  return (
+    <section className="container pb-12">
+      <div ref={headRef} className="mb-4 flex items-end justify-between">
+        <h2 className="font-label text-xs uppercase tracking-widest text-brand">Examples</h2>
+      </div>
+      <div ref={trackRef} className="no-scrollbar flex snap-x gap-6 overflow-x-auto pb-8">
+        {EXAMPLE_DESIGNS.map((item) => (
+          <ShowcaseCard key={item.id} item={item} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// Customer designs an admin has promoted. The endpoint returns nothing until
+// someone is curated in, and a heading over an empty rail reads as broken —
+// so the whole section is absent rather than empty. A failed fetch lands in
+// the same place, which is the right call for a supplementary strip.
 function CommunityCreations() {
-  const [items, setItems] = useState<ShowcaseDesign[]>(FALLBACK_COMMUNITY);
+  const [items, setItems] = useState<ShowcaseDesign[]>([]);
   const headRef = useScrollReveal<HTMLDivElement>();
   const trackRef = useStaggerReveal<HTMLDivElement>(".community-card", [items]);
 
   useEffect(() => {
     getShowcaseDesigns(10)
-      .then((res) => {
-        if (res.items.length > 0) setItems(res.items);
-      })
+      .then((res) => setItems(res.items))
       .catch(() => {
-        // Keep the fallback demo images.
+        // Leave the section hidden.
       });
   }, []);
 
+  if (items.length === 0) return null;
+
   return (
-    <section className="container pb-12">
-      <div ref={headRef} className="mb-4 flex items-end justify-between">
-        <h2 className="font-label text-xs uppercase tracking-widest text-brand">Community Creations</h2>
+    <section className="pb-12">
+      {/* Mirrors the page hero's type scale and centering (see the h1 above) —
+          an h2 rather than a second h1, since this sits under it. */}
+      <div ref={headRef} className="px-6 pb-8 pt-8 text-left lg:pb-12 lg:pt-16 lg:text-center">
+        <h2 className="font-display text-3xl text-foreground lg:text-5xl lg:sm:text-6xl lg:md:text-7xl">
+          Community Creations
+        </h2>
+        <p className="mt-3 max-w-2xl text-base text-muted-foreground lg:mx-auto lg:mt-4 lg:text-lg">
+          Real designs made with this tool &mdash; handpicked from our customers.
+        </p>
       </div>
-      <div ref={trackRef} className="no-scrollbar flex snap-x gap-6 overflow-x-auto pb-8">
-        {items.map((item) => (
-          <div key={item.id} className="community-card w-72 flex-none snap-start sm:w-80">
-            <div className="group overflow-hidden rounded-xl border border-border bg-card/60 backdrop-blur-xl">
-              <div className="relative aspect-square">
-                <img src={item.imageUrl} alt={item.label} className="h-full w-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="rounded-full bg-brand px-4 py-2 text-sm font-bold text-brand-foreground">
-                    Inspired?
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-4">
-                <span className="font-semibold text-foreground">{item.label}</span>
-                {item.dimensions && <span className="text-sm text-muted-foreground">{item.dimensions}</span>}
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="container">
+        <div ref={trackRef} className="no-scrollbar flex snap-x gap-6 overflow-x-auto pb-8">
+          {items.map((item) => (
+            <ShowcaseCard key={item.id} item={item} />
+          ))}
+        </div>
       </div>
     </section>
   );

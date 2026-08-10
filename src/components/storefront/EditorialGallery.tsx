@@ -1,33 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
-import { getShowcaseDesigns, type ShowcaseDesign } from '../../api/customNeon';
+import { EXAMPLE_DESIGNS } from '../../api/customNeon';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { Draggable, gsap, prefersReducedMotion } from '../../lib/motion';
 
-// Shown until the real custom-neon designs load (or if that fetch fails) —
-// same demo photography the rest of the storefront falls back to.
-const FALLBACK_ITEMS: ShowcaseDesign[] = [
-  { id: -1, label: 'Eevee outline · cyan', dimensions: null, imageUrl: '/assets/neon-gallery-1.png' },
-  { id: -2, label: 'Jigglypuff outline · pink', dimensions: null, imageUrl: '/assets/neon-gallery-2.png' },
-  { id: -3, label: 'Charmander outline · orange', dimensions: null, imageUrl: '/assets/neon-gallery-4.png' },
-  { id: -4, label: 'Pikachu outline · yellow', dimensions: null, imageUrl: '/assets/neon-gallery-5.png' },
-];
+// The signature series is a fixed set of studio examples, not a feed. Customer
+// designs an admin has promoted appear in Community Creations on /custom-neon
+// instead, so this strip never changes and never renders empty.
+const items = EXAMPLE_DESIGNS;
 
 export function EditorialGallery() {
-  const [items, setItems] = useState<ShowcaseDesign[]>(FALLBACK_ITEMS);
   const headRef = useScrollReveal<HTMLDivElement>();
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    getShowcaseDesigns(10)
-      .then((res) => {
-        if (res.items.length > 0) setItems(res.items);
-      })
-      .catch(() => {
-        // Keep the fallback demo images.
-      });
-  }, []);
 
   useGSAP(
     () => {
@@ -40,7 +25,10 @@ export function EditorialGallery() {
           duration: 0.8,
           stagger: 0.08,
           ease: 'power3.out',
-          scrollTrigger: { trigger: viewportRef.current, start: 'top 82%' },
+          // See useStaggerReveal — without these a `from` whose trigger hasn't
+          // fired leaves the cards stuck at opacity:0.
+          immediateRender: false,
+          scrollTrigger: { trigger: viewportRef.current, start: 'top 82%', invalidateOnRefresh: true },
         });
       }
 
@@ -58,7 +46,7 @@ export function EditorialGallery() {
         activeCursor: 'grabbing',
       });
     },
-    { scope: viewportRef, dependencies: [items], revertOnUpdate: true },
+    { scope: viewportRef },
   );
 
   return (
