@@ -913,8 +913,14 @@ function ShowcaseCard({ item }: { item: ShowcaseDesign }) {
   return (
     <div className="community-card w-72 flex-none snap-start sm:w-80">
       <div className="group overflow-hidden rounded-xl border border-border bg-card/60 backdrop-blur-xl">
-        <div className="relative aspect-square">
-          <img src={item.imageUrl} alt={item.label} className="h-full w-full object-cover" />
+        {/* overflow-hidden on the parent crops the scaled image, so the card
+            frame stays put while the photo pushes past it on hover. */}
+        <div className="relative aspect-square overflow-hidden">
+          <img
+            src={item.imageUrl}
+            alt={item.label}
+            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          />
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
             <span className="rounded-full bg-brand px-4 py-2 text-sm font-bold text-brand-foreground">
               Inspired?
