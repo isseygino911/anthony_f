@@ -299,6 +299,9 @@ export interface CustomNeonDesign {
   generatedImageUrl: string | null;
   imagesPurgedAt: string | null;
   productId: number | null;
+  // Admin curation flag — a design only appears in the public galleries once
+  // an admin promotes it. Defaults false for every new generation.
+  isShowcased: boolean;
   adminNotes: string | null;
   createdAt: string;
   updatedAt: string;

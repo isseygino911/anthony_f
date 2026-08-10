@@ -70,7 +70,7 @@ export function EditorialGallery() {
           </span>
           <h2 className="font-display text-5xl leading-none text-foreground sm:text-7xl">The Signature Series</h2>
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-            Ten real designs straight from the neon studio &mdash; drag to browse.
+            Real designs straight from the neon studio &mdash; drag to browse.
           </p>
         </div>
       </div>

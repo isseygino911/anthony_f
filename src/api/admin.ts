@@ -245,6 +245,12 @@ export function updateAdminCustomNeonDesignNotes(id: number, adminNotes: string)
   return api.patch<CustomNeonDesign>(`/admin/custom-neon-designs/${id}`, { admin_notes: adminNotes });
 }
 
+// Promotes/removes a design from the public storefront galleries. The server
+// rejects promoting anything that isn't a finished design with a preview.
+export function setCustomNeonDesignShowcased(id: number, isShowcased: boolean) {
+  return api.patch<CustomNeonDesign>(`/admin/custom-neon-designs/${id}/showcase`, { is_showcased: isShowcased });
+}
+
 export function getAdminCustomNeonUsage(query: { page?: number; pageSize?: number } = {}) {
   return api.get<Paginated<CustomNeonUsageRow>>('/admin/custom-neon-usage', { ...query });
 }
