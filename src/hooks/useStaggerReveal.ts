@@ -33,10 +33,16 @@ export function useStaggerReveal<T extends HTMLElement = HTMLDivElement>(
         duration,
         stagger,
         ease: 'power3.out',
-        scrollTrigger: { trigger: ref.current, start },
+        // Without invalidateOnRefresh + immediateRender:false, a `from` tween
+        // whose ScrollTrigger hasn't fired yet leaves the items stuck at
+        // opacity:0 — GSAP applies the start state immediately but nothing
+        // reverts it if the trigger is recalculated (or never reached) after
+        // async content changes the page height.
+        immediateRender: false,
+        scrollTrigger: { trigger: ref.current, start, invalidateOnRefresh: true },
       });
     },
-    [itemSelector, y, duration, stagger, start, ...deps],
+    { scope: ref, dependencies: [itemSelector, y, duration, stagger, start, ...deps], revertOnUpdate: true },
   );
 
   return ref;
