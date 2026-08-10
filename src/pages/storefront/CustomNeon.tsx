@@ -1,4 +1,4 @@
-import { Loader2, Pencil, RefreshCw, Sparkles, Type as TypeIcon, Upload } from "lucide-react";
+import { Loader2, Pencil, Plus, Sparkles, Type as TypeIcon, Upload } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -10,17 +10,24 @@ import {
   getActiveDesign,
   getDesign,
   getShowcaseDesigns,
-  regenerateDesign,
   type ShowcaseDesign,
 } from "../../api/customNeon";
 import { ApiError } from "../../api/client";
 import { ErrorMessage } from "../../components/layout/AsyncState";
 import { DesignStatusBadge } from "../../components/product/DesignStatusBadge";
 import { Button } from "../../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { useStaggerReveal } from "../../hooks/useStaggerReveal";
+import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { cn, formatCurrency } from "../../lib/utils";
 import type { CustomNeonDesign, DesignType, NeonColor, NeonSize } from "../../types";
@@ -212,6 +219,7 @@ function TextModeControls({
 
 export function CustomNeon() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { refresh: refreshCart } = useCart();
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -229,14 +237,19 @@ export function CustomNeon() {
   const [generating, setGenerating] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmNewOpen, setConfirmNewOpen] = useState(false);
 
   // Keeps ?designId= in sync with the in-progress/finished design so a
   // refresh (or sharing the URL) can reattach to it instead of losing it —
   // generation itself is server-side and keeps running either way, this is
-  // purely about the client not losing its reference to it.
+  // purely about the client not losing its reference to it. Clearing the
+  // design (Generate New) has to drop the param too, or a refresh would
+  // reattach to the design the user just walked away from.
   useEffect(() => {
     if (design) {
       setSearchParams({ designId: String(design.id) }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
     }
   }, [design, setSearchParams]);
 
@@ -329,17 +342,35 @@ export function CustomNeon() {
     }
   }
 
-  // Sends the currently selected size/color so changing either and hitting
-  // "Re-run AI preview" regenerates with the new values, not the old ones.
-  async function handleRegenerate() {
-    if (!design) return;
+  // Abandons the current design and returns the designer to its default
+  // state so the user can create something else — the finished design is
+  // left untouched on the server and stays listed under My Designs.
+  function handleGenerateNew() {
+    setConfirmNewOpen(false);
+    setDesign(null);
     setError(null);
-    try {
-      const updated = await regenerateDesign(design.id, { size, neon_color: neonColor });
-      setDesign(updated);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to re-run preview");
+    setSize("small");
+    setNeonColor("amber");
+    setText("");
+    setUploadFile(null);
+    // handleUploadChange creates this with URL.createObjectURL and nothing
+    // else revokes it, so dropping the reference without revoking leaks it.
+    setUploadPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+    canvasRef.current?.clearCanvas();
+  }
+
+  // My Designs is auth-gated, so a signed-out visitor who resets has no way
+  // back to the preview they just generated — confirm before discarding it.
+  // Logged-in users can always find it again, so they reset immediately.
+  function requestGenerateNew() {
+    if (user) {
+      handleGenerateNew();
+      return;
     }
+    setConfirmNewOpen(true);
   }
 
   async function handleConfirm() {
@@ -496,12 +527,12 @@ export function CustomNeon() {
               <div className="absolute inset-x-4 bottom-4 z-20 flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={handleRegenerate}
+                  onClick={requestGenerateNew}
                   disabled={isBusy}
-                  aria-label="Re-run AI preview"
+                  aria-label="Generate new design"
                   className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/80 text-foreground backdrop-blur-xl disabled:opacity-40"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                 </button>
                 <DesignStatusBadge status={design.status} />
                 {design.generatedImageUrl ? (
@@ -535,14 +566,14 @@ export function CustomNeon() {
 
           {design?.status === "failed" && (
             <div className="mt-3">
-              <ErrorMessage message="We couldn't generate a preview for this design. Try re-running it or start a new one." />
+              <ErrorMessage message="We couldn't generate a preview for this design. Tap the + button to start a new one." />
             </div>
           )}
 
           {isReady && !matchesGenerated && (
             <p className="mt-3 text-xs text-amber-500">
-              This preview was generated for {design?.size} / {design?.neonColor}. Re-run the preview to see your
-              new selection before confirming.
+              This preview was generated for {design?.size} / {design?.neonColor}. Switch back to those values to
+              confirm it, or start a new design to build one at your new selection.
             </p>
           )}
         </section>
@@ -752,23 +783,23 @@ export function CustomNeon() {
                   {!isBusy && (
                     <button
                       type="button"
-                      onClick={handleRegenerate}
+                      onClick={requestGenerateNew}
                       className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground hover:text-foreground"
                     >
-                      <RefreshCw className="h-3 w-3" /> Re-run AI preview
+                      <Plus className="h-3 w-3" /> Generate new
                     </button>
                   )}
                 </div>
               )}
 
               {design?.status === "failed" && (
-                <ErrorMessage message="We couldn't generate a preview for this design. Try re-running it or start a new one." />
+                <ErrorMessage message="We couldn't generate a preview for this design. Use “Generate new” to start another." />
               )}
 
               {isReady && !matchesGenerated && (
                 <p className="text-xs text-amber-500">
-                  This preview was generated for {design?.size} / {design?.neonColor}. Re-run the preview to see
-                  your new selection before confirming.
+                  This preview was generated for {design?.size} / {design?.neonColor}. Switch back to those values
+                  to confirm it, or start a new design to build one at your new selection.
                 </p>
               )}
 
@@ -858,6 +889,28 @@ export function CustomNeon() {
           </div>
         </div>
       </section>
+
+      {/* Signed-out only: My Designs is auth-gated, so starting over is the
+          point of no return for a visitor without an account. */}
+      <Dialog open={confirmNewOpen} onOpenChange={setConfirmNewOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Start a new design?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            You're not signed in, so this preview won't be saved anywhere you can get back to it. Sign in first to
+            keep it under My Designs.
+          </p>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => setConfirmNewOpen(false)}>
+              Keep this design
+            </Button>
+            <Button type="button" onClick={handleGenerateNew}>
+              Start over
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
