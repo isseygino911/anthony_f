@@ -276,7 +276,19 @@ export interface Notification {
 export type DesignType = 'upload' | 'draw' | 'text';
 export type CustomNeonDesignStatus = 'pending' | 'processing' | 'ready' | 'needs_review' | 'failed';
 export type NeonSize = 'small' | 'medium' | 'large';
-export type NeonColor = 'amber' | 'pink' | 'blue' | 'white';
+// Mirrors NEON_COLORS in anthony_b/src/services/customNeonDesign.service.js —
+// the backend rejects anything outside that list with 400 Invalid neon_color.
+export type NeonColor =
+  | 'amber'
+  | 'pink'
+  | 'blue'
+  | 'white'
+  | 'red'
+  | 'green'
+  | 'purple'
+  | 'orange'
+  | 'ice-blue'
+  | 'warm-white';
 
 export interface CustomNeonDesignInputPayload {
   sourceImageUrl?: string;

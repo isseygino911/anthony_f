@@ -47,11 +47,20 @@ const SIZE_OPTIONS: { value: NeonSize; label: string; price: number }[] = (
   ["small", "medium", "large"] as const
 ).map((value) => ({ value, label: NEON_SIZE_LABELS[value], price: NEON_SIZE_PRICES[value] }));
 
+// Swatches approximate the lit tube colour so the picker previews the result.
+// Each value must exist in NEON_COLORS (backend validation) and COLOR_LABELS
+// (the Gemini prompt wording) — see customNeonDesign.service.js.
 const COLOR_OPTIONS: { value: NeonColor; label: string; swatch: string }[] = [
   { value: "amber", label: "Amber", swatch: "#f5b400" },
   { value: "pink", label: "Pink", swatch: "#ec4899" },
   { value: "blue", label: "Blue", swatch: "#38bdf8" },
   { value: "white", label: "White", swatch: "#f8fafc" },
+  { value: "red", label: "Red", swatch: "#ef4444" },
+  { value: "green", label: "Green", swatch: "#22c55e" },
+  { value: "purple", label: "Purple", swatch: "#a855f7" },
+  { value: "orange", label: "Orange", swatch: "#fb923c" },
+  { value: "ice-blue", label: "Ice Blue", swatch: "#a5f3fc" },
+  { value: "warm-white", label: "Warm White", swatch: "#fef3c7" },
 ];
 
 const FONT_OPTIONS = [
@@ -596,7 +605,8 @@ export function CustomNeon() {
         {/* Colors */}
         <section className="px-4 pb-6">
           <h3 className="mb-4 font-display text-xl text-foreground">Neon Color</h3>
-          <div className="flex gap-4">
+          {/* wrap: the swatch row no longer fits one line at 10 colours */}
+          <div className="flex flex-wrap gap-4">
             {COLOR_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -841,7 +851,8 @@ export function CustomNeon() {
             {/* Colors */}
             <div>
               <h3 className="mb-4 font-label text-xs uppercase tracking-widest text-brand">Neon Color</h3>
-              <div className="flex gap-4">
+              {/* wrap: the swatch row no longer fits one line at 10 colours */}
+              <div className="flex flex-wrap gap-4">
                 {COLOR_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
