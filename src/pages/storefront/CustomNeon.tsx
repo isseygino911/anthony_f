@@ -17,7 +17,7 @@ import { ApiError } from "../../api/client";
 import { ErrorMessage } from "../../components/layout/AsyncState";
 import { DesignStatusBadge } from "../../components/product/DesignStatusBadge";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { useStaggerReveal } from "../../hooks/useStaggerReveal";
@@ -65,28 +65,149 @@ const FALLBACK_COMMUNITY: ShowcaseDesign[] = [
 
 const POLL_INTERVAL_MS = 3000;
 
+// Text-mode canvas geometry. Square to match the square product sizes
+// (12"x12" / 24"x24" / 36"x36") and Gemini's tendency to return 1:1.
+const CANVAS_SIZE = 1024;
+// Safe margin on each side so glyph ascenders/descenders and the italic
+// overhang of the script faces aren't shaved off at the canvas edge.
+const CANVAS_PADDING = 0.1;
+const MAX_FONT_PX = 200;
+const MIN_FONT_PX = 24;
+const LINE_HEIGHT = 1.25;
+const MAX_TEXT_LENGTH = 60;
+const MAX_LINES = 4;
+
 async function dataUrlToFile(dataUrl: string, filename: string): Promise<File> {
   const blob = await (await fetch(dataUrl)).blob();
   return new File([blob], filename, { type: blob.type || "image/png" });
 }
 
-function renderTextToFile(text: string, fontFamily: string): Promise<File> {
+// Splits on newlines and drops blank leading/trailing lines, so a stray
+// trailing Enter doesn't push the text off-centre. Shared by the canvas
+// renderer and the live preview so the two always agree.
+function toLines(text: string): string[] {
+  const lines = text.split("\n").map((line) => line.trim());
+  while (lines.length && !lines[0]) lines.shift();
+  while (lines.length && !lines[lines.length - 1]) lines.pop();
+  const capped = lines.slice(0, MAX_LINES);
+  return capped.length ? capped : ["Your Text"];
+}
+
+// Largest font size at which every line fits inside the padded box, both
+// horizontally (widest line) and vertically (stacked line height).
+function fitFontSize(ctx: CanvasRenderingContext2D, lines: string[], fontFamily: string, available: number) {
+  for (let fontSize = MAX_FONT_PX; fontSize > MIN_FONT_PX; fontSize -= 2) {
+    ctx.font = `${fontSize}px ${fontFamily}`;
+    const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
+    const stacked = lines.length * fontSize * LINE_HEIGHT;
+    if (widest <= available && stacked <= available) return fontSize;
+  }
+  return MIN_FONT_PX;
+}
+
+async function renderTextToFile(text: string, fontFamily: string): Promise<File> {
+  // The fonts load with display=swap, so without this the face may not be in
+  // the cache yet — measureText would silently report fallback-cursive
+  // metrics and we'd fit the text to the wrong typeface.
+  try {
+    await document.fonts.load(`${MAX_FONT_PX}px ${fontFamily}`);
+    await document.fonts.ready;
+  } catch {
+    // Font loading unavailable/failed — render with whatever is cached
+    // rather than blocking the user's generation.
+  }
+
   const canvas = document.createElement("canvas");
-  canvas.width = 800;
-  canvas.height = 400;
+  canvas.width = CANVAS_SIZE;
+  canvas.height = CANVAS_SIZE;
   const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = `64px ${fontFamily}`;
-  ctx.fillText(text || "Your Text", canvas.width / 2, canvas.height / 2);
+
+  const lines = toLines(text);
+  const available = CANVAS_SIZE * (1 - 2 * CANVAS_PADDING);
+  const fontSize = fitFontSize(ctx, lines, fontFamily, available);
+  ctx.font = `${fontSize}px ${fontFamily}`;
+
+  const lineHeight = fontSize * LINE_HEIGHT;
+  lines.forEach((line, i) => {
+    const y = CANVAS_SIZE / 2 + (i - (lines.length - 1) / 2) * lineHeight;
+    // maxWidth is the last-resort guard: at MIN_FONT_PX a pathological string
+    // condenses to fit instead of being clipped at the canvas edge.
+    ctx.fillText(line, CANVAS_SIZE / 2, y, available);
+  });
+
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       resolve(new File([blob!], "text-design.png", { type: "image/png" }));
     }, "image/png");
   });
+}
+
+// Rendered by both the mobile and desktop layouts — the only difference is
+// the preview box sizing, which the caller passes in.
+function TextModeControls({
+  text,
+  onTextChange,
+  fontFamily,
+  onFontChange,
+  previewClassName,
+  previewTextClassName,
+}: {
+  text: string;
+  onTextChange: (value: string) => void;
+  fontFamily: string;
+  onFontChange: (value: string) => void;
+  previewClassName: string;
+  previewTextClassName: string;
+}) {
+  // Enter inserts a real line break; this keeps the user from stacking more
+  // lines than the canvas renderer will draw.
+  function handleChange(value: string) {
+    const lines = value.split("\n");
+    onTextChange(lines.length > MAX_LINES ? lines.slice(0, MAX_LINES).join("\n") : value);
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <Textarea
+        placeholder="Enter your text"
+        value={text}
+        onChange={(e) => handleChange(e.target.value)}
+        maxLength={MAX_TEXT_LENGTH}
+        rows={3}
+      />
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Press Enter for a new line</span>
+        <span>
+          {text.length}/{MAX_TEXT_LENGTH}
+        </span>
+      </div>
+      <Select value={fontFamily} onValueChange={onFontChange}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {FONT_OPTIONS.map((f) => (
+            <SelectItem key={f.value} value={f.value}>
+              {f.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <div className={previewClassName}>
+        <p
+          className={previewTextClassName}
+          style={{ fontFamily, textShadow: "0 0 12px rgba(255,255,255,0.6)" }}
+        >
+          {text.trim() ? text : "Your Text"}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function CustomNeon() {
@@ -325,34 +446,14 @@ export function CustomNeon() {
             )}
 
             {mode === "text" && (
-              <div className="flex flex-col gap-3">
-                <Input
-                  placeholder="Enter your text"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  maxLength={40}
-                />
-                <Select value={fontFamily} onValueChange={setFontFamily}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FONT_OPTIONS.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex h-28 items-center justify-center overflow-hidden rounded-2xl border border-border bg-background">
-                  <p
-                    className="px-6 text-center text-2xl text-foreground"
-                    style={{ fontFamily, textShadow: "0 0 12px rgba(255,255,255,0.6)" }}
-                  >
-                    {text || "Your Text"}
-                  </p>
-                </div>
-              </div>
+              <TextModeControls
+                text={text}
+                onTextChange={setText}
+                fontFamily={fontFamily}
+                onFontChange={setFontFamily}
+                previewClassName="flex h-28 items-center justify-center overflow-hidden rounded-2xl border border-border bg-background"
+                previewTextClassName="whitespace-pre-line px-6 text-center text-2xl leading-tight text-foreground"
+              />
             )}
           </section>
         )}
@@ -371,7 +472,7 @@ export function CustomNeon() {
               <img
                 src={design.generatedImageUrl}
                 alt="AI-generated neon preview"
-                className="relative z-10 h-full w-full object-cover"
+                className="relative z-10 h-full w-full object-contain"
               />
             ) : isBusy ? (
               <div className="relative z-10 flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-muted-foreground">
@@ -527,7 +628,7 @@ export function CustomNeon() {
                 <img
                   src={design.generatedImageUrl}
                   alt="AI-generated neon preview"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               ) : isBusy ? (
                 <div className="flex flex-col items-center gap-3 px-12 text-center text-muted-foreground">
@@ -633,34 +734,14 @@ export function CustomNeon() {
                   )}
 
                   {mode === "text" && (
-                    <div className="flex flex-col gap-3">
-                      <Input
-                        placeholder="Enter your text"
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        maxLength={40}
-                      />
-                      <Select value={fontFamily} onValueChange={setFontFamily}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FONT_OPTIONS.map((f) => (
-                            <SelectItem key={f.value} value={f.value}>
-                              {f.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="flex h-32 items-center justify-center overflow-hidden rounded-xl border border-border bg-background">
-                        <p
-                          className="px-6 text-center text-3xl text-foreground"
-                          style={{ fontFamily, textShadow: "0 0 12px rgba(255,255,255,0.6)" }}
-                        >
-                          {text || "Your Text"}
-                        </p>
-                      </div>
-                    </div>
+                    <TextModeControls
+                      text={text}
+                      onTextChange={setText}
+                      fontFamily={fontFamily}
+                      onFontChange={setFontFamily}
+                      previewClassName="flex h-32 items-center justify-center overflow-hidden rounded-xl border border-border bg-background"
+                      previewTextClassName="whitespace-pre-line px-6 text-center text-3xl leading-tight text-foreground"
+                    />
                   )}
                 </div>
               )}

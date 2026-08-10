@@ -58,7 +58,10 @@ export function CustomNeonDesignDetail() {
         <div className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">Source input ({design.designType})</h2>
           {design.designType === 'text' ? (
-            <p className="text-lg" style={{ fontFamily: design.inputPayload.fontFamily ?? undefined }}>
+            <p
+              className="whitespace-pre-line text-lg"
+              style={{ fontFamily: design.inputPayload.fontFamily ?? undefined }}
+            >
               {design.inputPayload.text}
             </p>
           ) : sourceImageUrl ? (
