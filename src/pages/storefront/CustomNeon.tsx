@@ -42,6 +42,7 @@ import { cn, formatCurrency } from "../../lib/utils";
 import type { CustomNeonDesign, DesignType, NeonColor, NeonSize } from "../../types";
 import { ReactSketchCanvas } from "react-sketch-canvas";
 import type { ReactSketchCanvasRef } from "react-sketch-canvas";
+import { renderStrokesToFile } from "@/lib/smoothStrokes";
 
 type Mode = DesignType;
 
@@ -76,11 +77,6 @@ const MIN_FONT_PX = 24;
 const LINE_HEIGHT = 1.25;
 const MAX_TEXT_LENGTH = 60;
 const MAX_LINES = 4;
-
-async function dataUrlToFile(dataUrl: string, filename: string): Promise<File> {
-  const blob = await (await fetch(dataUrl)).blob();
-  return new File([blob], filename, { type: blob.type || "image/png" });
-}
 
 // Splits on newlines and drops blank leading/trailing lines, so a stray
 // trailing Enter doesn't push the text off-centre. Shared by the canvas
@@ -428,10 +424,14 @@ export function CustomNeon() {
       return { file: uploadFile };
     }
     if (mode === "draw") {
-      const dataUrl = await canvasRef.current?.exportImage("png");
-      if (!dataUrl) throw new Error("Draw something on the canvas first.");
+      // Render from the recorded stroke points rather than exporting the canvas
+      // bitmap: refineStrokes() removes the hand tremor and pointer jitter that
+      // the raw sketch bakes in, and the image model traces whatever it is
+      // given. `strokes` still carries the unmodified points to the server so
+      // the customer's original drawing stays on record.
       const strokes = await canvasRef.current?.exportPaths();
-      const file = await dataUrlToFile(dataUrl, "drawing.png");
+      if (!strokes?.length) throw new Error("Draw something on the canvas first.");
+      const file = await renderStrokesToFile(strokes, "drawing.png");
       return { file, strokes };
     }
     if (!text.trim()) throw new Error("Type some text first.");
@@ -784,7 +784,7 @@ export function CustomNeon() {
                 </div>
               )}
             </div>
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card/60 p-4 backdrop-blur-xl">
+            {/* <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card/60 p-4 backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/20">
                   <span className="text-brand">i</span>
@@ -796,7 +796,7 @@ export function CustomNeon() {
               <a href="/resources" className="shrink-0 text-sm font-semibold text-brand hover:underline">
                 See Technical Guide
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Right: controls */}
