@@ -225,9 +225,9 @@ export function Header() {
           <Link to="/" className="transition-colors hover:text-brand">
             Home
           </Link>
-          <Link to="/resources" className="transition-colors hover:text-brand">
+          {/* <Link to="/resources" className="transition-colors hover:text-brand">
             Resources
-          </Link>
+          </Link> */}
           <Link to="/company-insights" className="transition-colors hover:text-brand">
             Company
           </Link>

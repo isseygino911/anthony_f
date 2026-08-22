@@ -37,8 +37,8 @@ import { Login } from './pages/storefront/Login';
 import { OrderConfirmation } from './pages/storefront/OrderConfirmation';
 import { ProductDetail } from './pages/storefront/ProductDetail';
 import { Register } from './pages/storefront/Register';
-import { ResourceDetail } from './pages/storefront/ResourceDetail';
-import { Resources } from './pages/storefront/Resources';
+// import { ResourceDetail } from './pages/storefront/ResourceDetail';
+// import { Resources } from './pages/storefront/Resources';
 import { ThemeProvider } from './theme/ThemeProvider';
 
 function App() {
@@ -56,8 +56,8 @@ function App() {
                   <Route path="/category/:slug" element={<CategoryPage />} />
                   <Route path="/group/:id" element={<GroupPage />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
-                  <Route path="/resources" element={<Resources />} />
-                  <Route path="/resources/:id" element={<ResourceDetail />} />
+                  {/* <Route path="/resources" element={<Resources />} />
+                  <Route path="/resources/:id" element={<ResourceDetail />} /> */}
                   <Route path="/company-insights" element={<CompanyInsights />} />
                   <Route path="/custom-neon" element={<CustomNeon />} />
                   <Route path="/cart" element={<CartPage />} />
