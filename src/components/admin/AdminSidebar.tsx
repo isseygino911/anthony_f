@@ -1,4 +1,4 @@
-import { Bell, FileText, FolderTree, Lightbulb, LayoutDashboard, Mail, Package, Palette, Receipt, Shapes, Sparkles, Users } from 'lucide-react';
+import { Bell, FileText, FolderTree, Lightbulb, LayoutDashboard, Mail, MessageSquare, Package, Palette, Receipt, Shapes, Sparkles, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
@@ -40,6 +40,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: '/admin/theme', label: 'Theme settings', icon: Palette },
       { to: '/admin/newsletter', label: 'Newsletter', icon: Mail },
+      { to: '/admin/contact', label: 'Contact', icon: MessageSquare },
       { to: '/admin/resources', label: 'Resources', icon: FileText },
       { to: '/admin/notifications', label: 'Notifications', icon: Bell },
     ],

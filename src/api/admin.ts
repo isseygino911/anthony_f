@@ -2,6 +2,10 @@ import { api, ApiError, API_BASE_URL } from './client';
 import type {
   AdminOrder,
   Category,
+  ContactSubmission,
+  ContactSubmissionStatus,
+  ContactTopic,
+  ContactTopicSummary,
   CustomNeonDesign,
   CustomNeonDesignStatus,
   CustomNeonUsageRow,
@@ -281,6 +285,30 @@ export interface NewsletterSubscriber {
 
 export function getNewsletterSubscribers(query: { page?: number; pageSize?: number } = {}) {
   return api.get<Paginated<NewsletterSubscriber>>('/admin/newsletter/subscribers', { ...query });
+}
+
+// ---- Contact submissions ----
+
+interface ContactSubmissionQuery {
+  topic?: ContactTopic;
+  status?: ContactSubmissionStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+/** The per-topic `summary` rides along with every page so the category tabs
+ *  stay accurate regardless of which filter is active. */
+type ContactSubmissionList = Paginated<ContactSubmission> & { summary: ContactTopicSummary[] };
+
+export function getContactSubmissions(query: ContactSubmissionQuery = {}) {
+  return api.get<ContactSubmissionList>('/admin/contact/submissions', { ...query });
+}
+
+export function updateContactSubmission(
+  id: number,
+  body: { status?: ContactSubmissionStatus; adminNotes?: string },
+) {
+  return api.patch<ContactSubmission>(`/admin/contact/submissions/${id}`, body);
 }
 
 // ---- Dashboard ----

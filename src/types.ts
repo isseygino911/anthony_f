@@ -264,11 +264,43 @@ export interface SiteTheme extends ThemeResponse {
 
 export interface Notification {
   id: number;
-  type: 'low_stock' | 'custom_design_ordered';
+  type: 'low_stock' | 'custom_design_ordered' | 'contact_submission';
   product_id: number | null;
   message: string;
   is_read: boolean;
   created_at: string;
+}
+
+// ---- Contact forms ----
+
+/** One entry per storefront contact surface. Mirrors the `topic` enum in the
+ *  server's 036_create_contact_submissions.js migration. */
+export type ContactTopic = 'installer' | 'designer';
+
+export type ContactSubmissionStatus = 'new' | 'in_progress' | 'closed';
+
+export interface ContactSubmission {
+  id: number;
+  topic: ContactTopic;
+  user_id: number | null;
+  name: string;
+  email: string;
+  phone: string | null;
+  company: string | null;
+  message: string;
+  status: ContactSubmissionStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Per-topic tallies the admin panel renders as category tabs. Always covers
+ *  every known topic, including ones with no submissions yet. */
+export interface ContactTopicSummary {
+  topic: ContactTopic;
+  label: string;
+  total: number;
+  new: number;
 }
 
 // ---- Custom Neon Designer ----

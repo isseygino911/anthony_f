@@ -2,6 +2,7 @@ import { useGSAP } from '@gsap/react';
 import { ArrowRight } from 'lucide-react';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { ContactDialog } from '../../components/contact/ContactDialog';
 import { EditorialGallery } from '../../components/storefront/EditorialGallery';
 import { SpotlightCard } from '../../components/ui/spotlight-card';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
@@ -169,13 +170,15 @@ function ImmersiveCTA() {
           >
             Get a Quote
           </Link>
-          <Link
-            to="/company-insights"
-            className="group flex items-center gap-4 font-label text-xs font-bold uppercase tracking-[0.3em] text-brand"
-          >
-            <span className="h-px w-12 bg-brand/30 transition-all group-hover:w-16" />
-            Speak with a Designer
-          </Link>
+          <ContactDialog topic="designer">
+            <button
+              type="button"
+              className="group flex items-center gap-4 font-label text-xs font-bold uppercase tracking-[0.3em] text-brand"
+            >
+              <span className="h-px w-12 bg-brand/30 transition-all group-hover:w-16" />
+              Speak with a Designer
+            </button>
+          </ContactDialog>
         </div>
       </div>
     </section>

@@ -1,16 +1,8 @@
-import {
-  ArrowRight,
-  CheckCircle2,
-  Clock,
-  Lightbulb,
-  Mail,
-  MapPin,
-  Phone,
-  Play,
-  Sparkles,
-} from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { CheckCircle2, Lightbulb, Sparkles } from 'lucide-react';
+// ArrowRight, Clock, Mail, MapPin, Phone, Play and useState are only used by
+// the Showroom Locations / Contact / Showcase sections commented out further
+// down this file — re-import them alongside whichever section is brought back.
+import { ContactDialog } from '../../components/contact/ContactDialog';
 import { useTheme } from '../../hooks/useTheme';
 
 interface ProductLine {
@@ -63,36 +55,41 @@ const TYPICAL_APPLICATIONS = [
   'Hotels and hospitality properties',
 ];
 
-interface Showroom {
-  city: string;
-  address: string;
-}
-
-const SHOWROOMS: Showroom[] = [
-  { city: 'Farmingdale, N.Y.', address: '906 Conklin Street' },
-  { city: 'Williston Park, N.Y.', address: '390 Hillside Ave' },
-  { city: 'Lawrence, N.Y.', address: '259 Burnside Ave' },
-  { city: 'Yonkers, N.Y.', address: '454 South Broadway' },
-];
-
-function mapsHref(showroom: Showroom): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    `${showroom.address}, ${showroom.city}`,
-  )}`;
-}
-
-interface VideoItem {
-  id: string;
-  title: string;
-}
-
-const VIDEOS: VideoItem[] = [
-  { id: 'E8Ftv3pZRGY', title: 'Custom-Made LED Neon Signs by LumiNation' },
-  { id: 'u4v9IVCPsFM', title: 'Multicolor LED Lights for your pool INSTALLED !' },
-  { id: 'aTLmG2Soq8I', title: 'My New Favorite Products From LumiNation !' },
-  { id: 'GFDUJ924nAc', title: 'A Trip To A Client Jobsite' },
-  { id: '_h1lN8ijR_c', title: 'Real Customer Real Experience' },
-];
+// Data for the Showroom Locations and Showcase & Training sections, both of
+// which are commented out further down this file. Parked here (rather than
+// deleted) alongside the markup they feed, so restoring a section is a single
+// uncomment. tsconfig has noUnusedLocals on, so they cannot stay live while
+// their markup is not.
+// interface Showroom {
+//   city: string;
+//   address: string;
+// }
+//
+// const SHOWROOMS: Showroom[] = [
+//   { city: 'Farmingdale, N.Y.', address: '906 Conklin Street' },
+//   { city: 'Williston Park, N.Y.', address: '390 Hillside Ave' },
+//   { city: 'Lawrence, N.Y.', address: '259 Burnside Ave' },
+//   { city: 'Yonkers, N.Y.', address: '454 South Broadway' },
+// ];
+//
+// function mapsHref(showroom: Showroom): string {
+//   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+//     `${showroom.address}, ${showroom.city}`,
+//   )}`;
+// }
+//
+// interface VideoItem {
+//   id: string;
+//   title: string;
+// }
+//
+// const VIDEOS: VideoItem[] = [
+//   { id: 'E8Ftv3pZRGY', title: 'Custom-Made LED Neon Signs by LumiNation' },
+//   { id: 'u4v9IVCPsFM', title: 'Multicolor LED Lights for your pool INSTALLED !' },
+//   { id: 'aTLmG2Soq8I', title: 'My New Favorite Products From LumiNation !' },
+//   { id: 'GFDUJ924nAc', title: 'A Trip To A Client Jobsite' },
+//   { id: '_h1lN8ijR_c', title: 'Real Customer Real Experience' },
+// ];
 
 export function CompanyInsights() {
   const { theme } = useTheme();
@@ -215,17 +212,18 @@ export function CompanyInsights() {
             </div>
           </div>
 
-          <Link
-            to="/products"
-            className="inline-flex h-12 w-fit items-center justify-center rounded-full bg-brand-foreground px-8 text-xs font-semibold uppercase tracking-[0.12em] text-brand transition-opacity hover:opacity-80"
-          >
-            Get Started
-          </Link>
+          <ContactDialog topic="installer">
+            <button
+              type="button"
+              className="inline-flex h-12 w-fit items-center justify-center rounded-full bg-brand-foreground px-8 text-xs font-semibold uppercase tracking-[0.12em] text-brand transition-opacity hover:opacity-80"
+            >
+              Get Started
+            </button>
+          </ContactDialog>
         </div>
       </section>
 
-      <div className="container flex flex-col gap-20 py-12 sm:gap-24 sm:py-16">
-        {/* Showroom Locations */}
+      {/* <div className="container flex flex-col gap-20 py-12 sm:gap-24 sm:py-16">
         <section className="flex flex-col gap-6">
           <div className="flex items-center gap-2 border-b border-border pb-3">
             <MapPin className="h-5 w-5 text-muted-foreground" />
@@ -251,10 +249,10 @@ export function CompanyInsights() {
           </div>
           <p className="text-sm text-muted-foreground">Stay tuned for other locations opening soon!</p>
         </section>
-      </div>
+      </div> */}
 
       {/* Contact */}
-      <section className="bg-muted">
+      {/* <section className="bg-muted">
         <div className="container grid grid-cols-1 gap-8 py-12 sm:grid-cols-3 sm:py-14">
           <div className="flex flex-col items-start gap-2">
             <Phone className="h-5 w-5 text-muted-foreground" />
@@ -280,10 +278,9 @@ export function CompanyInsights() {
             <span className="text-sm font-semibold">Daily 9:00 AM &ndash; 5:00 PM</span>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      <div className="container flex flex-col gap-6 py-12 sm:py-16">
-        {/* Showcase & Training */}
+      {/* <div className="container flex flex-col gap-6 py-12 sm:py-16">
         <section className="flex flex-col gap-6">
           <h2 className="border-b border-border pb-3 font-display text-2xl uppercase leading-none tracking-normal sm:text-3xl">
             Showcase &amp; Training
@@ -294,47 +291,47 @@ export function CompanyInsights() {
             ))}
           </div>
         </section>
-      </div>
+      </div> */}
     </div>
   );
 }
 
-function VideoCard({ video }: { video: VideoItem }) {
-  const [playing, setPlaying] = useState(false);
+// function VideoCard({ video }: { video: VideoItem }) {
+//   const [playing, setPlaying] = useState(false);
 
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border bg-muted">
-        {playing ? (
-          <iframe
-            className="h-full w-full"
-            src={`https://www.youtube.com/embed/${video.id}?autoplay=1`}
-            title={video.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setPlaying(true)}
-            className="group relative block h-full w-full"
-            aria-label={`Play video: ${video.title}`}
-          >
-            <img
-              src={`https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}
-              alt=""
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-            <span className="absolute inset-0 flex items-center justify-center bg-foreground/10 transition-colors group-hover:bg-foreground/20">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-md transition-transform group-hover:scale-105">
-                <Play className="h-6 w-6 fill-current" />
-              </span>
-            </span>
-          </button>
-        )}
-      </div>
-      <span className="text-sm font-medium">{video.title}</span>
-    </div>
-  );
-}
+//   return (
+//     <div className="flex flex-col gap-3">
+//       <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border bg-muted">
+//         {playing ? (
+//           <iframe
+//             className="h-full w-full"
+//             src={`https://www.youtube.com/embed/${video.id}?autoplay=1`}
+//             title={video.title}
+//             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+//             allowFullScreen
+//           />
+//         ) : (
+//           <button
+//             type="button"
+//             onClick={() => setPlaying(true)}
+//             className="group relative block h-full w-full"
+//             aria-label={`Play video: ${video.title}`}
+//           >
+//             <img
+//               src={`https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}
+//               alt=""
+//               className="h-full w-full object-cover"
+//               loading="lazy"
+//             />
+//             <span className="absolute inset-0 flex items-center justify-center bg-foreground/10 transition-colors group-hover:bg-foreground/20">
+//               <span className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-md transition-transform group-hover:scale-105">
+//                 <Play className="h-6 w-6 fill-current" />
+//               </span>
+//             </span>
+//           </button>
+//         )}
+//       </div>
+//       <span className="text-sm font-medium">{video.title}</span>
+//     </div>
+//   );
+// }

@@ -9,6 +9,7 @@ import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import { FavoritesProvider } from './hooks/useFavorites';
 import { Categories } from './pages/admin/Categories';
+import { ContactSubmissions } from './pages/admin/ContactSubmissions';
 import { CustomNeonDesignDetail } from './pages/admin/CustomNeonDesignDetail';
 import { CustomNeonDesigns } from './pages/admin/CustomNeonDesigns';
 import { CustomNeonUsage } from './pages/admin/CustomNeonUsage';
@@ -126,6 +127,7 @@ function App() {
                   <Route path="custom-neon-usage" element={<CustomNeonUsage />} />
                   <Route path="theme" element={<ThemeSettings />} />
                   <Route path="newsletter" element={<Newsletter />} />
+                  <Route path="contact" element={<ContactSubmissions />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="resources" element={<AdminResources />} />
                   <Route path="insights" element={<Insights />} />
