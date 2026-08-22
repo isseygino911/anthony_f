@@ -461,15 +461,17 @@ export function CustomNeon() {
     }
   }
 
-  // Abandons the current design and returns the designer to its default
-  // state so the user can create something else — the finished design is
-  // left untouched on the server and stays listed under My Designs.
+  // Abandons the current design so the user can create something else — the
+  // finished design is left untouched on the server and stays listed under My
+  // Designs. Clears what the design was *of* (text, upload, sketch) but keeps
+  // the chosen neon colour: someone who dialled in a custom hex is almost
+  // always making another sign in that same colour, and re-picking it from the
+  // colour picker every time is pure friction.
   function handleGenerateNew() {
     setConfirmNewOpen(false);
     setDesign(null);
     setError(null);
     setSize("small");
-    setNeonColor("amber");
     setText("");
     setUploadFile(null);
     // handleUploadChange creates this with URL.createObjectURL and nothing
