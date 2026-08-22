@@ -16,7 +16,7 @@ import {
 } from '../../api/admin';
 import type { ProductOptionGroupInput } from '../../api/admin';
 import { ApiError } from '../../api/client';
-import { NEON_SIZE_LABELS, NEON_SIZE_PRICES } from '../../api/customNeon';
+import { NEON_SIZE_LABELS, NEON_SIZE_PRICES, describeNeonColorForDescription } from '../../api/customNeon';
 import { getCategories, getGroups, getProduct, getProductOptions, previewProductPrice } from '../../api/products';
 import { ErrorMessage } from '../../components/layout/AsyncState';
 import { FormulaBuilder } from '../../components/admin/FormulaBuilder';
@@ -171,8 +171,11 @@ export function ProductForm() {
         setForm((prev) => ({
           ...prev,
           name: `Custom Neon Design #${design.id}`,
+          // Mirrors the description confirmDesign() writes server-side (see
+          // describeColorForCustomer in customNeonDesign.service.js) — the two
+          // must produce identical text for the same design.
           description: dimensions
-            ? `Custom AI-generated neon sign design (${dimensions}, ${design.neonColor}).`
+            ? `Custom AI-generated neon sign design (${dimensions}, ${describeNeonColorForDescription(design.neonColor)}).`
             : prev.description,
           price: String(design.price ?? (design.size ? NEON_SIZE_PRICES[design.size] : '')),
           sku: `NEON-PUB-${design.id}`,

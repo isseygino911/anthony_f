@@ -1,5 +1,14 @@
 import { api } from './client';
-import type { Cart, CustomNeonDesign, DesignType, NeonColor, NeonSize, Paginated } from '../types';
+import type {
+  Cart,
+  CustomNeonColor,
+  CustomNeonDesign,
+  DesignType,
+  NeonColor,
+  NeonPresetColor,
+  NeonSize,
+  Paginated,
+} from '../types';
 
 // Single source of truth for the size -> physical dimension label, shared by
 // the storefront designer (paired with pricing) and the admin views (shown
@@ -13,11 +22,89 @@ export const NEON_SIZE_LABELS: Record<NeonSize, string> = {
 // Mirrors SIZE_PRICES in server/src/services/customNeonDesign.service.js.
 // The server is authoritative for what a customer is actually charged; these
 // are for display and for prefilling the admin publish form.
+// Colour has no effect on price — only size does.
 export const NEON_SIZE_PRICES: Record<NeonSize, number> = {
   small: 249.99,
   medium: 399.99,
   large: 524.99,
 };
+
+// Swatches approximate the lit tube colour so the picker previews the result.
+// Each value must exist in NEON_COLORS (backend validation) and COLOR_LABELS
+// (the Gemini prompt wording) — see customNeonDesign.service.js. Customers can
+// also pick a colour outside this list; those travel as `custom:#rrggbb`.
+export const NEON_PRESETS: { value: NeonPresetColor; label: string; swatch: string }[] = [
+  { value: 'amber', label: 'Amber', swatch: '#f5b400' },
+  { value: 'pink', label: 'Pink', swatch: '#ec4899' },
+  { value: 'blue', label: 'Blue', swatch: '#38bdf8' },
+  { value: 'white', label: 'White', swatch: '#f8fafc' },
+  { value: 'red', label: 'Red', swatch: '#ef4444' },
+  { value: 'green', label: 'Green', swatch: '#22c55e' },
+  { value: 'purple', label: 'Purple', swatch: '#a855f7' },
+  { value: 'orange', label: 'Orange', swatch: '#fb923c' },
+  { value: 'ice-blue', label: 'Ice Blue', swatch: '#a5f3fc' },
+  { value: 'warm-white', label: 'Warm White', swatch: '#fef3c7' },
+];
+
+// Must stay in sync with CUSTOM_COLOR_RE in
+// anthony_b/src/services/customNeonDesign.service.js — the backend rejects
+// anything else with 400 Invalid neon_color, so a mismatch here surfaces to the
+// customer as a failed Generate rather than as a wrong colour.
+export const CUSTOM_COLOR_RE = /^custom:#[0-9a-f]{6}$/;
+
+export const DEFAULT_CUSTOM_HEX = '#ff2d95';
+
+export function isCustomNeonColor(value: NeonColor | null | undefined): value is CustomNeonColor {
+  return typeof value === 'string' && CUSTOM_COLOR_RE.test(value);
+}
+
+/** '#RRGGBB' | '#rgb' | 'RRGGBB' -> canonical lowercase '#rrggbb', or null. */
+export function normalizeHex(input: string): string | null {
+  const raw = input.trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{3}$/.test(raw)) return `#${raw[0]}${raw[0]}${raw[1]}${raw[1]}${raw[2]}${raw[2]}`;
+  if (/^[0-9a-f]{6}$/.test(raw)) return `#${raw}`;
+  return null;
+}
+
+/** Canonical encoded value for the wire, or null if the hex is unusable. */
+export function toCustomNeonColor(hex: string): CustomNeonColor | null {
+  const normalized = normalizeHex(hex);
+  return normalized ? (`custom:${normalized}` as CustomNeonColor) : null;
+}
+
+/** The bare '#rrggbb' of a custom value, or null for presets. */
+export function customHexOf(value: NeonColor | null | undefined): string | null {
+  return isCustomNeonColor(value) ? value.slice('custom:'.length) : null;
+}
+
+/** The CSS colour to paint a swatch with, for presets and custom alike. */
+export function neonSwatchHex(value: NeonColor | null | undefined): string {
+  const hex = customHexOf(value);
+  if (hex) return hex;
+  return NEON_PRESETS.find((preset) => preset.value === value)?.swatch ?? 'transparent';
+}
+
+// Display-ready label for every read-only surface (order text, My Designs, the
+// admin views). Returns 'Custom #FF2D95' rather than the raw stored token, so
+// callers must not add a `capitalize` class on top of it. Mirrors
+// describeColorForCustomer() in customNeonDesign.service.js.
+export function formatNeonColor(value: NeonColor | null | undefined): string {
+  if (!value) return '—';
+  const hex = customHexOf(value);
+  if (hex) return `Custom ${hex.toUpperCase()}`;
+  return NEON_PRESETS.find((preset) => preset.value === value)?.label ?? value;
+}
+
+// The colour fragment used inside a product description. Must produce byte-for-byte
+// the same text as describeColorForCustomer() in customNeonDesign.service.js: the
+// admin publish form prefills the description client-side, and the server writes it
+// on confirm, so any divergence shows up as two different descriptions for one
+// design. Presets stay as their raw slug ('ice-blue'), custom picks read
+// 'custom #FF2D95'.
+export function describeNeonColorForDescription(value: NeonColor | null | undefined): string {
+  const hex = customHexOf(value);
+  return hex ? `custom ${hex.toUpperCase()}` : (value ?? '');
+}
 
 interface CreateDesignInput {
   designType: DesignType;

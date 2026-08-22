@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getAdminCustomNeonDesign, updateAdminCustomNeonDesignNotes } from '../../api/admin';
-import { NEON_SIZE_LABELS } from '../../api/customNeon';
+import { NEON_SIZE_LABELS, formatNeonColor } from '../../api/customNeon';
 import { ErrorMessage } from '../../components/layout/AsyncState';
 import { DesignStatusBadge } from '../../components/product/DesignStatusBadge';
 import { Button } from '../../components/ui/button';
@@ -106,7 +106,9 @@ export function CustomNeonDesignDetail() {
           </div>
           <div>
             <dt className="text-muted-foreground">Color</dt>
-            <dd className="capitalize">{design.neonColor ?? '—'}</dd>
+            {/* formatNeonColor returns display-ready text (e.g. 'Custom #FF2D95'),
+                so no `capitalize` here — it would mangle the hex. */}
+            <dd>{formatNeonColor(design.neonColor)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Price</dt>

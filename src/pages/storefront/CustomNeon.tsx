@@ -3,13 +3,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+  DEFAULT_CUSTOM_HEX,
+  NEON_PRESETS,
   NEON_SIZE_LABELS,
   NEON_SIZE_PRICES,
   confirmDesign,
   createDesign,
+  customHexOf,
+  formatNeonColor,
   getActiveDesign,
   getDesign,
   getShowcaseDesigns,
+  isCustomNeonColor,
+  normalizeHex,
+  toCustomNeonColor,
   EXAMPLE_DESIGNS,
   type ShowcaseDesign,
 } from "../../api/customNeon";
@@ -24,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
@@ -46,22 +54,6 @@ const MODES: { value: Mode; label: string; icon: typeof Upload }[] = [
 const SIZE_OPTIONS: { value: NeonSize; label: string; price: number }[] = (
   ["small", "medium", "large"] as const
 ).map((value) => ({ value, label: NEON_SIZE_LABELS[value], price: NEON_SIZE_PRICES[value] }));
-
-// Swatches approximate the lit tube colour so the picker previews the result.
-// Each value must exist in NEON_COLORS (backend validation) and COLOR_LABELS
-// (the Gemini prompt wording) — see customNeonDesign.service.js.
-const COLOR_OPTIONS: { value: NeonColor; label: string; swatch: string }[] = [
-  { value: "amber", label: "Amber", swatch: "#f5b400" },
-  { value: "pink", label: "Pink", swatch: "#ec4899" },
-  { value: "blue", label: "Blue", swatch: "#38bdf8" },
-  { value: "white", label: "White", swatch: "#f8fafc" },
-  { value: "red", label: "Red", swatch: "#ef4444" },
-  { value: "green", label: "Green", swatch: "#22c55e" },
-  { value: "purple", label: "Purple", swatch: "#a855f7" },
-  { value: "orange", label: "Orange", swatch: "#fb923c" },
-  { value: "ice-blue", label: "Ice Blue", swatch: "#a5f3fc" },
-  { value: "warm-white", label: "Warm White", swatch: "#fef3c7" },
-];
 
 const FONT_OPTIONS = [
   { value: '"Dancing Script", cursive', label: "Dancing Script" },
@@ -153,6 +145,132 @@ async function renderTextToFile(text: string, fontFamily: string): Promise<File>
       resolve(new File([blob!], "text-design.png", { type: "image/png" }));
     }, "image/png");
   });
+}
+
+// Presets plus a customer-picked colour, rendered from one place. The mobile
+// and desktop layouts differ only in swatch size and hover affordance, so those
+// come in as props rather than as a second copy of this markup — same approach
+// TextModeControls takes below.
+function NeonColorPicker({
+  value,
+  onChange,
+  swatchClassName,
+  hoverClassName = "",
+}: {
+  value: NeonColor;
+  onChange: (value: NeonColor) => void;
+  swatchClassName: string;
+  hoverClassName?: string;
+}) {
+  const isCustom = isCustomNeonColor(value);
+  const [open, setOpen] = useState(isCustom);
+  // Free-form while typing; only committed once it parses, so a half-typed
+  // "#ff2" never reaches the API or blanks out the swatch.
+  const [draftHex, setDraftHex] = useState(customHexOf(value) ?? DEFAULT_CUSTOM_HEX);
+
+  // Reopen the panel when an existing custom design is rehydrated into the page.
+  useEffect(() => {
+    const hex = customHexOf(value);
+    if (hex) {
+      setDraftHex(hex);
+      setOpen(true);
+    }
+  }, [value]);
+
+  function commitHex(next: string) {
+    setDraftHex(next);
+    const encoded = toCustomNeonColor(next);
+    if (encoded) onChange(encoded);
+  }
+
+  const draftIsValid = normalizeHex(draftHex) !== null;
+
+  return (
+    <>
+      {/* wrap: the swatch row no longer fits one line at 10 colours */}
+      <div className="flex flex-wrap gap-4">
+        {NEON_PRESETS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            aria-label={opt.label}
+            aria-pressed={value === opt.value}
+            onClick={() => {
+              setOpen(false);
+              onChange(opt.value);
+            }}
+            className={cn(
+              swatchClassName,
+              "rounded-full border-4 transition-transform",
+              value === opt.value ? "scale-110 border-brand" : cn("border-transparent", hoverClassName),
+            )}
+            style={{ backgroundColor: opt.swatch }}
+          />
+        ))}
+
+        {/* 11th chip: opens the custom picker. Shows the chosen colour once one
+            is active, and a rainbow ring otherwise so it doesn't read as an
+            eleventh preset. */}
+        <button
+          type="button"
+          aria-label="Custom colour"
+          aria-pressed={isCustom}
+          aria-expanded={open}
+          onClick={() => setOpen((prev) => !prev)}
+          className={cn(
+            swatchClassName,
+            "flex items-center justify-center rounded-full border-4 transition-transform",
+            isCustom ? "scale-110 border-brand" : cn("border-transparent", hoverClassName),
+          )}
+          style={
+            isCustom
+              ? { backgroundColor: customHexOf(value) ?? DEFAULT_CUSTOM_HEX }
+              : {
+                  backgroundImage:
+                    "conic-gradient(#ef4444, #f5b400, #22c55e, #38bdf8, #a855f7, #ec4899, #ef4444)",
+                }
+          }
+        >
+          {!isCustom && <Plus className="h-4 w-4 text-white drop-shadow" />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card/60 p-3 backdrop-blur-xl">
+          <input
+            type="color"
+            aria-label="Pick a custom colour"
+            value={normalizeHex(draftHex) ?? DEFAULT_CUSTOM_HEX}
+            onChange={(e) => commitHex(e.target.value)}
+            className="h-10 w-16 cursor-pointer rounded border"
+          />
+          <div className="flex flex-col gap-1">
+            <Input
+              value={draftHex}
+              onChange={(e) => commitHex(e.target.value)}
+              maxLength={7}
+              placeholder="#FF2D95"
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              aria-label="Custom colour hex code"
+              className="w-32 font-mono text-sm"
+            />
+            {!draftIsValid && <span className="text-xs text-amber-500">Enter a hex like #FF2D95</span>}
+          </div>
+          {/* Shows roughly how the tube will glow at this colour. */}
+          <span
+            aria-hidden
+            className="h-8 w-8 rounded-full"
+            style={{
+              backgroundColor: normalizeHex(draftHex) ?? "transparent",
+              boxShadow: draftIsValid ? `0 0 20px ${normalizeHex(draftHex)}` : undefined,
+            }}
+          />
+        </div>
+      )}
+    </>
+  );
 }
 
 // Rendered by both the mobile and desktop layouts — the only difference is
@@ -573,7 +691,7 @@ export function CustomNeon() {
 
           {isReady && !matchesGenerated && (
             <p className="mt-3 text-xs text-amber-500">
-              This preview was generated for {design?.size} / {design?.neonColor}. Switch back to those values to
+              This preview was generated for {design?.size} / {formatNeonColor(design?.neonColor)}. Switch back to those values to
               confirm it, or start a new design to build one at your new selection.
             </p>
           )}
@@ -605,22 +723,7 @@ export function CustomNeon() {
         {/* Colors */}
         <section className="px-4 pb-6">
           <h3 className="mb-4 font-display text-xl text-foreground">Neon Color</h3>
-          {/* wrap: the swatch row no longer fits one line at 10 colours */}
-          <div className="flex flex-wrap gap-4">
-            {COLOR_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                aria-label={opt.label}
-                onClick={() => setNeonColor(opt.value)}
-                className={cn(
-                  "h-11 w-11 rounded-full border-4 transition-transform",
-                  neonColor === opt.value ? "scale-110 border-brand" : "border-transparent",
-                )}
-                style={{ backgroundColor: opt.swatch }}
-              />
-            ))}
-          </div>
+          <NeonColorPicker value={neonColor} onChange={setNeonColor} swatchClassName="h-11 w-11" />
         </section>
 
         {error && (
@@ -800,7 +903,7 @@ export function CustomNeon() {
 
               {isReady && !matchesGenerated && (
                 <p className="text-xs text-amber-500">
-                  This preview was generated for {design?.size} / {design?.neonColor}. Switch back to those values
+                  This preview was generated for {design?.size} / {formatNeonColor(design?.neonColor)}. Switch back to those values
                   to confirm it, or start a new design to build one at your new selection.
                 </p>
               )}
@@ -851,22 +954,12 @@ export function CustomNeon() {
             {/* Colors */}
             <div>
               <h3 className="mb-4 font-label text-xs uppercase tracking-widest text-brand">Neon Color</h3>
-              {/* wrap: the swatch row no longer fits one line at 10 colours */}
-              <div className="flex flex-wrap gap-4">
-                {COLOR_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    aria-label={opt.label}
-                    onClick={() => setNeonColor(opt.value)}
-                    className={cn(
-                      "h-12 w-12 rounded-full border-4 transition-transform",
-                      neonColor === opt.value ? "scale-110 border-brand" : "border-transparent hover:border-border",
-                    )}
-                    style={{ backgroundColor: opt.swatch }}
-                  />
-                ))}
-              </div>
+              <NeonColorPicker
+                value={neonColor}
+                onChange={setNeonColor}
+                swatchClassName="h-12 w-12"
+                hoverClassName="hover:border-border"
+              />
             </div>
 
             {error && <ErrorMessage message={error} />}

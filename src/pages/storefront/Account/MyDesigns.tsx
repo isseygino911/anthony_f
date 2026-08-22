@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../../../api/client';
-import { NEON_SIZE_LABELS, confirmDesign, listMyDesigns } from '../../../api/customNeon';
+import { NEON_SIZE_LABELS, confirmDesign, formatNeonColor, listMyDesigns } from '../../../api/customNeon';
 import { EmptyState, ErrorMessage } from '../../../components/layout/AsyncState';
 import { DesignStatusBadge } from '../../../components/product/DesignStatusBadge';
 import { Button } from '../../../components/ui/button';
@@ -92,8 +92,10 @@ export function MyDesigns() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-medium capitalize">{design.designType} design</p>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {design.size ? `${NEON_SIZE_LABELS[design.size]} · ${design.neonColor}` : '—'}
+                    {/* No `capitalize`: formatNeonColor already returns display-ready
+                        text, and it would mangle a custom hex like #FF2D95. */}
+                    <p className="text-sm text-muted-foreground">
+                      {design.size ? `${NEON_SIZE_LABELS[design.size]} · ${formatNeonColor(design.neonColor)}` : '—'}
                     </p>
                   </div>
                   <DesignStatusBadge status={design.status} />

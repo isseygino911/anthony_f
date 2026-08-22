@@ -278,7 +278,7 @@ export type CustomNeonDesignStatus = 'pending' | 'processing' | 'ready' | 'needs
 export type NeonSize = 'small' | 'medium' | 'large';
 // Mirrors NEON_COLORS in anthony_b/src/services/customNeonDesign.service.js —
 // the backend rejects anything outside that list with 400 Invalid neon_color.
-export type NeonColor =
+export type NeonPresetColor =
   | 'amber'
   | 'pink'
   | 'blue'
@@ -289,6 +289,14 @@ export type NeonColor =
   | 'orange'
   | 'ice-blue'
   | 'warm-white';
+
+// Customer-picked colours travel in the same field, encoded as `custom:#rrggbb`
+// (lowercase, 6 digits) — mirrors CUSTOM_COLOR_RE in customNeonDesign.service.js.
+// The template literal documents the shape but can't constrain the hex alphabet,
+// so isCustomNeonColor()/normalizeHex() in api/customNeon.ts are the real guards.
+export type CustomNeonColor = `custom:#${string}`;
+
+export type NeonColor = NeonPresetColor | CustomNeonColor;
 
 export interface CustomNeonDesignInputPayload {
   sourceImageUrl?: string;
