@@ -183,6 +183,37 @@ export function priceQuote(id: number, prices: Record<number, number>) {
   );
 }
 
+// Fabrication spec sheet. Same binary-download shape as downloadInvoice
+// below; available for any order regardless of status, because the workshop
+// needs it before the order ships.
+export async function downloadSpecSheet(id: number | string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/orders/${id}/spec-sheet`, {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const isJson = response.headers.get('content-type')?.includes('application/json');
+    const payload = isJson ? await response.json().catch(() => null) : null;
+    const err = payload?.error;
+    throw new ApiError(
+      response.status,
+      err?.message ?? response.statusText ?? 'Failed to download spec sheet',
+      err?.code,
+      err?.details,
+    );
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `spec-sheet-${id}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // Binary PDF response — the shared `api` wrapper is JSON-only, so this is a
 // standalone fetch that mirrors client.ts's base-URL + credentials handling.
 export async function downloadInvoice(id: number | string): Promise<void> {

@@ -186,7 +186,11 @@ export function Orders() {
                               {item.quantity ? ` × ${item.quantity}` : ''}
                             </span>
                             <span>
-                              {formatCurrency(item.unit_price ? item.unit_price * (item.quantity ?? 1) : (item.amount ?? 0))}
+                              {item.unit_price == null && item.amount == null
+                                ? PRICING_TBD_LABEL
+                                : formatCurrency(
+                                    item.unit_price ? item.unit_price * (item.quantity ?? 1) : (item.amount ?? 0),
+                                  )}
                             </span>
                           </div>
                         ))}

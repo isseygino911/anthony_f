@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useParams } from "react-router-dom";
-import { adjustOrder, downloadInvoice, getAdminOrder, priceQuote } from "../../api/admin";
+import { adjustOrder, downloadInvoice, downloadSpecSheet, getAdminOrder, priceQuote } from "../../api/admin";
 import type { OrderAdjustmentType } from "../../api/admin";
 import { ErrorMessage } from "../../components/layout/AsyncState";
 import { Badge } from "../../components/ui/badge";
@@ -18,7 +18,7 @@ import {
 import { Skeleton } from "../../components/ui/skeleton";
 import { Textarea } from "../../components/ui/textarea";
 import { formatCurrency, PRICING_TBD_LABEL } from "../../lib/utils";
-import type { AdminOrder, OrderStatus } from "../../types";
+import type { AdminOrder, OrderLineDesign, OrderStatus } from "../../types";
 
 const ADJUSTMENT_TYPES: { value: OrderAdjustmentType; label: string; disabled?: boolean }[] = [
   { value: "discount", label: "Discount" },
@@ -40,6 +40,73 @@ const ORDER_STATUSES: OrderStatus[] = [
   "cancelled",
 ];
 
+// The design behind a neon line: preview plus the values the workshop builds
+// from. Rendered inline under the line item so an admin sees what was ordered
+// without opening the design page.
+function DesignSpec({ design }: { design: OrderLineDesign }) {
+  const fields: [string, string][] = [
+    ['Design', design.designId ? `#${design.designId}` : '—'],
+    ['Size', design.sizeLabel ?? '—'],
+    ['Dimensions', design.dimensions ?? '—'],
+  ];
+
+  return (
+    <div className="flex gap-3 rounded-md border border-border/60 bg-muted/30 p-3">
+      {design.imageUrl ? (
+        <a href={design.imageUrl} target="_blank" rel="noreferrer" className="shrink-0">
+          <img
+            src={design.imageUrl}
+            alt={`Design ${design.designId ?? ''} preview`}
+            className="h-20 w-20 rounded border object-cover"
+          />
+        </a>
+      ) : (
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded border bg-background text-center text-[10px] text-muted-foreground">
+          {design.imagesPurgedAt ? 'Image purged' : 'No preview'}
+        </div>
+      )}
+
+      <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
+        {fields.map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="font-medium">{value}</dd>
+          </div>
+        ))}
+        <div>
+          <dt className="text-muted-foreground">Colour</dt>
+          <dd className="flex items-center gap-1.5 font-medium">
+            {/* A custom colour is only meaningful as its hex, so the swatch
+                and the code are shown together. */}
+            {design.colorHex && (
+              <span
+                className="inline-block h-3 w-3 shrink-0 rounded-full border"
+                style={{ backgroundColor: design.colorHex }}
+              />
+            )}
+            <span>{design.colorHex ?? design.colorLabel ?? '—'}</span>
+          </dd>
+        </div>
+        {design.isQuote && (
+          <div className="col-span-2 sm:col-span-4">
+            <span className="text-xs text-amber-600">Custom size — priced by hand</span>
+          </div>
+        )}
+        {design.resolvedFrom === 'design' && (
+          <div className="col-span-2 sm:col-span-4">
+            {/* Worth surfacing: these values come from the design record, not
+                from a snapshot frozen at purchase, so they would follow a
+                later regeneration of that design. */}
+            <span className="text-[11px] text-muted-foreground">
+              Recovered from the design record (placed before order snapshots).
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<AdminOrder | null>(null);
@@ -53,6 +120,8 @@ export function OrderDetail() {
   const [formError, setFormError] = useState<string | null>(null);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [downloadingSpec, setDownloadingSpec] = useState(false);
+  const [specError, setSpecError] = useState<string | null>(null);
   // order_item id -> typed unit price, for a pending_quote order.
   const [quotePrices, setQuotePrices] = useState<Record<number, string>>({});
   const [pricingQuote, setPricingQuote] = useState(false);
@@ -132,6 +201,19 @@ export function OrderDetail() {
   if (error) return <ErrorMessage message={error} />;
   if (!order) return <Skeleton className="h-64 w-full" />;
 
+  async function handleDownloadSpecSheet() {
+    if (!order) return;
+    setDownloadingSpec(true);
+    setSpecError(null);
+    try {
+      await downloadSpecSheet(order.id);
+    } catch (err) {
+      setSpecError(err instanceof Error ? err.message : "Failed to download spec sheet");
+    } finally {
+      setDownloadingSpec(false);
+    }
+  }
+
   async function handleDownloadInvoice() {
     if (!order) return;
     setDownloadingInvoice(true);
@@ -152,6 +234,16 @@ export function OrderDetail() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Order #{order.id}</h1>
         <div className="flex items-center gap-3">
+          {/* Always offered: the workshop needs the spec before the order
+              ships, so this is not gated on status the way the invoice is. */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownloadSpecSheet}
+            disabled={downloadingSpec}
+          >
+            {downloadingSpec ? "Preparing..." : "Download Spec Sheet"}
+          </Button>
           {order.status === "delivered" && (
             <Button
               type="button"
@@ -167,6 +259,7 @@ export function OrderDetail() {
       </div>
 
       {invoiceError && <ErrorMessage message={invoiceError} />}
+      {specError && <ErrorMessage message={specError} />}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-lg border p-4">
@@ -188,22 +281,25 @@ export function OrderDetail() {
 
         <div className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">Line items</h2>
-          <div className="flex flex-col gap-1 text-sm">
+          <div className="flex flex-col gap-3 text-sm">
             {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between">
-                <span>
-                  {item.label}
-                  {item.quantity ? ` × ${item.quantity}` : ""}
-                </span>
-                <span>
-                  {item.unit_price == null && item.amount == null
-                    ? PRICING_TBD_LABEL
-                    : formatCurrency(
-                        item.unit_price
-                          ? item.unit_price * (item.quantity ?? 1)
-                          : (item.amount ?? 0),
-                      )}
-                </span>
+              <div key={item.id} className="flex flex-col gap-2">
+                <div className="flex justify-between">
+                  <span>
+                    {item.label}
+                    {item.quantity ? ` × ${item.quantity}` : ""}
+                  </span>
+                  <span>
+                    {item.unit_price == null && item.amount == null
+                      ? PRICING_TBD_LABEL
+                      : formatCurrency(
+                          item.unit_price
+                            ? item.unit_price * (item.quantity ?? 1)
+                            : (item.amount ?? 0),
+                        )}
+                  </span>
+                </div>
+                {item.design && <DesignSpec design={item.design} />}
               </div>
             ))}
           </div>

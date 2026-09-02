@@ -212,6 +212,29 @@ export interface ShippingAddress {
   country: string;
 }
 
+// The neon design behind an order line, as resolved for the admin views.
+// Present only on lines that are a custom neon design.
+export interface OrderLineDesign {
+  designId: number | null;
+  size: NeonSize | null;
+  sizeLabel: string | null;
+  dimensions: string | null;
+  isQuote: boolean;
+  colorLabel: string | null;
+  /** Bare hex for a customer-picked colour, null for a preset. */
+  colorHex: string | null;
+  designType?: DesignType | null;
+  /** Signed S3 URL, null when the image was purged or is unreadable. */
+  imageUrl: string | null;
+  imagesPurgedAt?: string | null;
+  /**
+   * 'snapshot' = read from the line's own frozen selected_options (what was
+   * actually sold). 'design' = recovered from the linked design row, for
+   * orders placed before snapshots existed.
+   */
+  resolvedFrom: 'snapshot' | 'design';
+}
+
 export interface OrderLineItem {
   id: number;
   item_type: 'line' | 'adjustment';
@@ -220,6 +243,8 @@ export interface OrderLineItem {
   unit_price: number | null;
   quantity: number | null;
   amount: number | null;
+  selected_options?: SelectedOptionsSnapshot | null;
+  design?: OrderLineDesign | null;
 }
 
 export interface OrderSummary {
