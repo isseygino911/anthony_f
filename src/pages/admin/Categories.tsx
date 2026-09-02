@@ -74,8 +74,12 @@ export function Categories() {
       await deleteCategory(category.id);
       load();
     } catch (err) {
+      // The 409 body distinguishes live products from soft-deleted ones still
+      // holding the foreign key — those are invisible in the product list, so
+      // showing a generic "has products" here would send the admin looking for
+      // rows they cannot see. Prefer the server's wording.
       if (err instanceof ApiError && err.status === 409) {
-        alert('This category still has products assigned to it. Move or delete those products first.');
+        alert(err.message || 'This category still has products assigned to it.');
       } else {
         alert(err instanceof Error ? err.message : 'Failed to delete category');
       }

@@ -1,5 +1,5 @@
-import { Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ImageOff, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { createGroup, deleteGroup, replaceGroupProducts } from '../../api/admin';
 import { getGroupProducts, getGroups, getProducts } from '../../api/products';
@@ -16,6 +16,14 @@ import {
 } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
 import { Textarea } from '../../components/ui/textarea';
 import type { Product, ProductGroup } from '../../types';
 
@@ -124,6 +132,16 @@ function GroupRow({
   const [memberIds, setMemberIds] = useState<Set<number>>(new Set());
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [filter, setFilter] = useState('');
+
+  const visibleProducts = useMemo(() => {
+    const needle = filter.trim().toLowerCase();
+    if (!needle) return allProducts;
+    return allProducts.filter(
+      (product) =>
+        product.name.toLowerCase().includes(needle) || product.sku.toLowerCase().includes(needle)
+    );
+  }, [allProducts, filter]);
 
   useEffect(() => {
     getGroupProducts(group.id, { pageSize: 100, includeInactive: true })
@@ -163,21 +181,107 @@ function GroupRow({
       </div>
 
       {loaded && (
-        <div className="mt-4 flex flex-col gap-2">
-          <p className="text-sm font-medium">Products in this group</p>
-          <div className="flex flex-wrap gap-3">
-            {allProducts.map((product) => (
-              <label key={product.id} className="flex items-center gap-2 text-sm">
-                <Checkbox checked={memberIds.has(product.id)} onCheckedChange={() => toggle(product.id)} />
-                {product.name}
-              </label>
-            ))}
+        <div className="mt-4 flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium">
+              Products in this group{' '}
+              <span className="font-normal text-muted-foreground">
+                ({memberIds.size} of {allProducts.length} selected)
+              </span>
+            </p>
+            <Input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Filter products..."
+              aria-label="Filter products"
+              className="h-8 w-full sm:w-64"
+            />
           </div>
+
+          <div className="max-h-96 overflow-y-auto rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <span className="sr-only">In group</span>
+                  </TableHead>
+                  <TableHead className="w-16">Preview</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="w-28">SKU</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleProducts.map((product) => {
+                  const checkboxId = `group-${group.id}-product-${product.id}`;
+                  return (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <Checkbox
+                          id={checkboxId}
+                          checked={memberIds.has(product.id)}
+                          onCheckedChange={() => toggle(product.id)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <ProductThumb product={product} />
+                      </TableCell>
+                      <TableCell>
+                        {/* The label is the name cell rather than a wrapper, so the
+                            whole row name stays a click target for the checkbox. */}
+                        <label htmlFor={checkboxId} className="cursor-pointer font-medium">
+                          {product.name}
+                        </label>
+                        {product.is_active === false && (
+                          <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{product.sku}</TableCell>
+                    </TableRow>
+                  );
+                })}
+                {visibleProducts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+                      No products match &ldquo;{filter}&rdquo;.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
           <Button size="sm" className="w-fit" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving...' : 'Save membership'}
           </Button>
         </div>
       )}
     </div>
+  );
+}
+
+// Same primary-image rule as the storefront's ProductCard. The admin list
+// endpoint already returns a one-element images[] holding the signed primary
+// URL, so this needs no extra request per row.
+function ProductThumb({ product }: { product: Product }) {
+  const image = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
+
+  if (!image) {
+    return (
+      <div
+        className="flex h-10 w-10 items-center justify-center rounded border bg-muted"
+        title="No image"
+      >
+        <ImageOff aria-hidden className="h-4 w-4 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={image.url}
+      alt=""
+      loading="lazy"
+      className="h-10 w-10 rounded border object-cover"
+    />
   );
 }
