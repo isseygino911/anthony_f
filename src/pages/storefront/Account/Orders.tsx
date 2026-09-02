@@ -5,12 +5,13 @@ import { EmptyState, ErrorMessage } from '../../../components/layout/AsyncState'
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Skeleton } from '../../../components/ui/skeleton';
-import { formatCurrency } from '../../../lib/utils';
+import { formatCurrency, PRICING_TBD_LABEL } from '../../../lib/utils';
 import type { Order, OrderSummary } from '../../../types';
 import { PaymentStep } from '../PaymentStep';
 
 const STATUS_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'destructive' | 'secondary'> = {
   pending_payment: 'warning',
+  pending_quote: 'secondary',
   processing: 'default',
   shipped: 'default',
   delivered: 'success',
@@ -120,7 +121,9 @@ export function Orders() {
                   <Badge variant={STATUS_VARIANT[order.status] ?? 'default'}>
                     {order.status.replace('_', ' ')}
                   </Badge>
-                  <span className="font-medium">{formatCurrency(order.total)}</span>
+                  <span className="font-medium">
+                    {order.status === 'pending_quote' ? PRICING_TBD_LABEL : formatCurrency(order.total)}
+                  </span>
                   {expandedId === order.id ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
@@ -128,6 +131,15 @@ export function Orders() {
                   )}
                 </div>
               </button>
+
+              {order.status === 'pending_quote' && (
+                <div className="border-t border-border/70 px-5 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    We are preparing a quote for the custom size on this order. Nothing has been
+                    charged — we will email you and post a notification here as soon as it is priced.
+                  </p>
+                </div>
+              )}
 
               {order.status === 'pending_payment' && (
                 <div className="flex items-center gap-3 border-t border-border/70 px-5 py-3">

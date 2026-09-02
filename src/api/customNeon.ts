@@ -1,6 +1,7 @@
 import { api } from './client';
 import type {
   Cart,
+  PresetNeonSize,
   CustomNeonColor,
   CustomNeonDesign,
   DesignType,
@@ -13,17 +14,35 @@ import type {
 // Single source of truth for the size -> physical dimension label, shared by
 // the storefront designer (paired with pricing) and the admin views (shown
 // as-is) so the two never drift apart.
-export const NEON_SIZE_LABELS: Record<NeonSize, string> = {
+// 'custom' has no fixed label — the dimensions come from the customer, so
+// the server sends back a derived `dimensions` string on the design instead.
+// PRESET_SIZES is what the picker iterates; the custom option is rendered
+// separately because it owns two number inputs rather than a fixed label.
+export const NEON_SIZE_LABELS: Record<PresetNeonSize, string> = {
   small: '12"x12"',
   medium: '24"x24"',
   large: '36"x36"',
 };
 
+export const PRESET_SIZES: PresetNeonSize[] = ['small', 'medium', 'large'];
+
+// Mirrors MIN_CUSTOM_IN / MAX_CUSTOM_IN in the backend service — the server
+// re-validates, so these only exist to catch a bad value before the round
+// trip and to populate the inputs' min/max attributes.
+export const MIN_CUSTOM_IN = 4;
+export const MAX_CUSTOM_IN = 120;
+
+// Formats typed dimensions the way the server's describeDimensions does, for
+// optimistic display before a design row comes back.
+export function formatCustomDimensions(widthIn: number, heightIn: number): string {
+  return `${widthIn}"x${heightIn}"`;
+}
+
 // Mirrors SIZE_PRICES in server/src/services/customNeonDesign.service.js.
 // The server is authoritative for what a customer is actually charged; these
 // are for display and for prefilling the admin publish form.
 // Colour has no effect on price — only size does.
-export const NEON_SIZE_PRICES: Record<NeonSize, number> = {
+export const NEON_SIZE_PRICES: Record<PresetNeonSize, number> = {
   small: 249.99,
   medium: 399.99,
   large: 524.99,
@@ -114,6 +133,10 @@ interface CreateDesignInput {
   fontFamily?: string;
   size: NeonSize;
   neonColor: NeonColor;
+  // Required when size === 'custom', ignored otherwise — the server rejects
+  // the mismatched combinations either way (assertSizeAndColor).
+  customWidthIn?: number;
+  customHeightIn?: number;
 }
 
 export function createDesign(input: CreateDesignInput) {
@@ -122,6 +145,8 @@ export function createDesign(input: CreateDesignInput) {
   formData.append('file', input.file);
   formData.append('size', input.size);
   formData.append('neon_color', input.neonColor);
+  if (input.customWidthIn !== undefined) formData.append('custom_width_in', String(input.customWidthIn));
+  if (input.customHeightIn !== undefined) formData.append('custom_height_in', String(input.customHeightIn));
   if (input.strokes !== undefined) formData.append('strokes', JSON.stringify(input.strokes));
   if (input.text) formData.append('text', input.text);
   if (input.fontFamily) formData.append('font_family', input.fontFamily);

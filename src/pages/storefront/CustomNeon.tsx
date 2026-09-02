@@ -1,10 +1,12 @@
 import { Loader2, Pencil, Plus, Sparkles, Type as TypeIcon, Upload } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   DEFAULT_CUSTOM_HEX,
   NEON_PRESETS,
+  MAX_CUSTOM_IN,
+  MIN_CUSTOM_IN,
   NEON_SIZE_LABELS,
   NEON_SIZE_PRICES,
   confirmDesign,
@@ -38,7 +40,7 @@ import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { useStaggerReveal } from "../../hooks/useStaggerReveal";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
-import { cn, formatCurrency } from "../../lib/utils";
+import { cn, formatCurrency, PRICING_TBD_LABEL } from "../../lib/utils";
 import type { CustomNeonDesign, DesignType, NeonColor, NeonSize } from "../../types";
 import { ReactSketchCanvas } from "react-sketch-canvas";
 import type { ReactSketchCanvasRef } from "react-sketch-canvas";
@@ -52,9 +54,79 @@ const MODES: { value: Mode; label: string; icon: typeof Upload }[] = [
   { value: "text", label: "Type Text", icon: TypeIcon },
 ];
 
-const SIZE_OPTIONS: { value: NeonSize; label: string; price: number }[] = (
-  ["small", "medium", "large"] as const
-).map((value) => ({ value, label: NEON_SIZE_LABELS[value], price: NEON_SIZE_PRICES[value] }));
+// price null = "we quote this by hand". The custom option is appended rather
+// than derived because it is the one size with no fixed dimensions or price:
+// the customer types both, and the sign is priced after the order is placed.
+// Width/height inputs shown when the custom size is picked. Extracted because
+// the page renders the size picker twice (mobile and desktop layouts) and both
+// need identical validation wording and bounds.
+function CustomSizeInputs({
+  width,
+  height,
+  onWidthChange,
+  onHeightChange,
+  error,
+}: {
+  width: string;
+  height: string;
+  onWidthChange: (value: string) => void;
+  onHeightChange: (value: string) => void;
+  error: string | null;
+}) {
+  return (
+    <div className="mt-3 rounded-xl border border-border/70 bg-card/60 p-4">
+      <p className="text-xs text-muted-foreground">
+        Enter the size you need in inches. We price custom sizes by hand and will send you a quote —
+        you will not be charged when you place the order.
+      </p>
+      <div className="mt-3 flex items-end gap-3">
+        <label className="flex-1">
+          <span className="mb-1 block text-xs font-medium text-foreground">Width (in)</span>
+          <Input
+            type="number"
+            inputMode="decimal"
+            min={MIN_CUSTOM_IN}
+            max={MAX_CUSTOM_IN}
+            step="0.5"
+            value={width}
+            onChange={(e) => onWidthChange(e.target.value)}
+            placeholder="36"
+          />
+        </label>
+        <span className="pb-2 text-muted-foreground">×</span>
+        <label className="flex-1">
+          <span className="mb-1 block text-xs font-medium text-foreground">Height (in)</span>
+          <Input
+            type="number"
+            inputMode="decimal"
+            min={MIN_CUSTOM_IN}
+            max={MAX_CUSTOM_IN}
+            step="0.5"
+            value={height}
+            onChange={(e) => onHeightChange(e.target.value)}
+            placeholder="18"
+          />
+        </label>
+      </div>
+      {error ? (
+        <p className="mt-2 text-xs text-destructive">{error}</p>
+      ) : (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Between {MIN_CUSTOM_IN}" and {MAX_CUSTOM_IN}" on each side.
+        </p>
+      )}
+    </div>
+  );
+}
+
+const SIZE_OPTIONS: { value: NeonSize; label: string; price: number | null }[] = [
+  ...(["small", "medium", "large"] as const).map((value) => ({
+    value: value as NeonSize,
+    label: NEON_SIZE_LABELS[value],
+    price: NEON_SIZE_PRICES[value],
+  })),
+  { value: "custom", label: "Custom size", price: null },
+];
 
 const FONT_OPTIONS = [
   { value: '"Dancing Script", cursive', label: "Dancing Script" },
@@ -346,6 +418,11 @@ export function CustomNeon() {
   const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
 
   const [size, setSize] = useState<NeonSize>("small");
+  // Typed dimensions for size === 'custom'. Held as strings so the inputs can
+  // be empty while the customer is still typing; parsed and range-checked in
+  // customDimensions below, and re-validated server-side.
+  const [customWidth, setCustomWidth] = useState("");
+  const [customHeight, setCustomHeight] = useState("");
   const [neonColor, setNeonColor] = useState<NeonColor>("amber");
 
   const [design, setDesign] = useState<CustomNeonDesign | null>(null);
@@ -381,15 +458,13 @@ export function CustomNeon() {
         if (designId) {
           const found = await getDesign(Number(designId));
           setDesign(found);
-          setSize(found.size ?? "small");
-          setNeonColor(found.neonColor ?? "amber");
+          restoreSelection(found);
           return;
         }
         const { design: active } = await getActiveDesign();
         if (active) {
           setDesign(active);
-          setSize(active.size ?? "small");
-          setNeonColor(active.neonColor ?? "amber");
+          restoreSelection(active);
         }
       } catch {
         // Unknown/foreign designId, or not logged in yet — fall back to a
@@ -439,8 +514,23 @@ export function CustomNeon() {
     return { file };
   }, [mode, uploadFile, text, fontFamily]);
 
+  // Puts the pickers back to whatever the loaded design was generated with.
+  // The dimensions matter as much as the size here: without them a
+  // reattached custom design would compare unequal in matchesGenerated and
+  // show a "preview is stale" warning for a preview that is perfectly current.
+  function restoreSelection(loaded: CustomNeonDesign) {
+    setSize(loaded.size ?? "small");
+    setNeonColor(loaded.neonColor ?? "amber");
+    setCustomWidth(loaded.customWidthIn != null ? String(loaded.customWidthIn) : "");
+    setCustomHeight(loaded.customHeightIn != null ? String(loaded.customHeightIn) : "");
+  }
+
   async function handleGenerate() {
     setError(null);
+    if (isQuoteSize && !customDimensions) {
+      setError(`Enter a width and height between ${MIN_CUSTOM_IN}" and ${MAX_CUSTOM_IN}" first.`);
+      return;
+    }
     setGenerating(true);
     try {
       const { file, strokes } = await buildFileForMode();
@@ -452,6 +542,8 @@ export function CustomNeon() {
         fontFamily: mode === "text" ? fontFamily : undefined,
         size,
         neonColor,
+        customWidthIn: customDimensions?.widthIn,
+        customHeightIn: customDimensions?.heightIn,
       });
       setDesign(created);
     } catch (err) {
@@ -509,14 +601,46 @@ export function CustomNeon() {
     }
   }
 
+  // Parsed, range-checked dimensions — null whenever the custom size is
+  // selected but the inputs are not yet a valid pair, which is what gates
+  // Generate. Mirrors parseDimension() on the server; the server re-validates,
+  // so this only saves a round trip and gives an inline message.
+  const customDimensions = useMemo(() => {
+    if (size !== "custom") return null;
+    const width = Number(customWidth);
+    const height = Number(customHeight);
+    if (!customWidth.trim() || !customHeight.trim()) return null;
+    if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+    if (width < MIN_CUSTOM_IN || width > MAX_CUSTOM_IN) return null;
+    if (height < MIN_CUSTOM_IN || height > MAX_CUSTOM_IN) return null;
+    return { widthIn: Math.round(width * 100) / 100, heightIn: Math.round(height * 100) / 100 };
+  }, [size, customWidth, customHeight]);
+
+  const isQuoteSize = size === "custom";
+  // Only blocks once the customer has typed something — an untouched pair of
+  // empty inputs should not read as an error.
+  const customDimensionsError =
+    isQuoteSize && (customWidth.trim() || customHeight.trim()) && !customDimensions
+      ? `Enter a width and height between ${MIN_CUSTOM_IN}" and ${MAX_CUSTOM_IN}".`
+      : null;
+
   const isReady = design?.status === "ready";
   const isBusy = design?.status === "pending" || design?.status === "processing";
   // The preview image was rendered for design.size/design.neonColor — if the
   // user has since changed the live selection, the picture on screen no
   // longer matches what they'd be buying, so Confirm is gated until they
   // either re-run the preview or switch back to the generated values.
-  const matchesGenerated = Boolean(design) && design?.size === size && design?.neonColor === neonColor;
-  const selectedPrice = SIZE_OPTIONS.find((s) => s.value === size)?.price ?? 0;
+  // A custom-size preview is also stale if the typed dimensions changed since
+  // it was rendered — the picture is of a specific shape, so 40x20 and 20x40
+  // are not interchangeable even though both are "custom".
+  const matchesGenerated =
+    Boolean(design) &&
+    design?.size === size &&
+    design?.neonColor === neonColor &&
+    (!isQuoteSize ||
+      (design?.customWidthIn === customDimensions?.widthIn &&
+        design?.customHeightIn === customDimensions?.heightIn));
+  const selectedPrice = SIZE_OPTIONS.find((s) => s.value === size)?.price ?? null;
 
   return (
     <div className="pb-24">
@@ -693,7 +817,7 @@ export function CustomNeon() {
 
           {isReady && !matchesGenerated && (
             <p className="mt-3 text-xs text-amber-500">
-              This preview was generated for {design?.size} / {formatNeonColor(design?.neonColor)}. Switch back to those values to
+              This preview was generated for {design?.dimensions ?? design?.size} / {formatNeonColor(design?.neonColor)}. Switch back to those values to
               confirm it, or start a new design to build one at your new selection.
             </p>
           )}
@@ -702,7 +826,7 @@ export function CustomNeon() {
         {/* Dimensions */}
         <section className="px-4 pb-6">
           <h3 className="mb-4 font-display text-xl text-foreground">Select Dimensions</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {SIZE_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -715,11 +839,20 @@ export function CustomNeon() {
               >
                 <span className="text-sm font-bold text-foreground">{opt.label}</span>
                 <span className={cn("text-xs", size === opt.value ? "text-brand" : "text-muted-foreground")}>
-                  {formatCurrency(opt.price)}
+                  {opt.price === null ? "Quoted by us" : formatCurrency(opt.price)}
                 </span>
               </button>
             ))}
           </div>
+          {isQuoteSize && (
+            <CustomSizeInputs
+              width={customWidth}
+              height={customHeight}
+              onWidthChange={setCustomWidth}
+              onHeightChange={setCustomHeight}
+              error={customDimensionsError}
+            />
+          )}
         </section>
 
         {/* Colors */}
@@ -742,7 +875,7 @@ export function CustomNeon() {
           <div className="flex items-center justify-between gap-4 rounded-3xl border border-border bg-card/90 p-4 shadow-2xl backdrop-blur-xl">
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Subtotal</span>
-              <span className="font-display text-2xl text-foreground">{formatCurrency(selectedPrice)}</span>
+              <span className="font-display text-2xl text-foreground">{selectedPrice === null ? PRICING_TBD_LABEL : formatCurrency(selectedPrice)}</span>
             </div>
             <Button
               type="button"
@@ -905,7 +1038,7 @@ export function CustomNeon() {
 
               {isReady && !matchesGenerated && (
                 <p className="text-xs text-amber-500">
-                  This preview was generated for {design?.size} / {formatNeonColor(design?.neonColor)}. Switch back to those values
+                  This preview was generated for {design?.dimensions ?? design?.size} / {formatNeonColor(design?.neonColor)}. Switch back to those values
                   to confirm it, or start a new design to build one at your new selection.
                 </p>
               )}
@@ -926,7 +1059,7 @@ export function CustomNeon() {
             {/* Dimensions */}
             <div>
               <h3 className="mb-4 font-label text-xs uppercase tracking-widest text-brand">Select Dimensions</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {SIZE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -946,11 +1079,20 @@ export function CustomNeon() {
                       {opt.label}
                     </span>
                     <span className={size === opt.value ? "font-semibold text-brand" : "text-muted-foreground"}>
-                      {formatCurrency(opt.price)}
+                      {opt.price === null ? "Quoted by us" : formatCurrency(opt.price)}
                     </span>
                   </button>
                 ))}
               </div>
+              {isQuoteSize && (
+                <CustomSizeInputs
+                  width={customWidth}
+                  height={customHeight}
+                  onWidthChange={setCustomWidth}
+                  onHeightChange={setCustomHeight}
+                  error={customDimensionsError}
+                />
+              )}
             </div>
 
             {/* Colors */}
@@ -970,7 +1112,7 @@ export function CustomNeon() {
             <div className="space-y-6 border-t border-border pt-8">
               <div className="flex items-center justify-between">
                 <span className="text-lg text-muted-foreground">Subtotal</span>
-                <span className="font-display text-3xl text-foreground">{formatCurrency(selectedPrice)}</span>
+                <span className="font-display text-3xl text-foreground">{selectedPrice === null ? PRICING_TBD_LABEL : formatCurrency(selectedPrice)}</span>
               </div>
               <Button
                 type="button"

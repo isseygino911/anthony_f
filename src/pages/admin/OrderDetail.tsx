@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useParams } from "react-router-dom";
-import { adjustOrder, downloadInvoice, getAdminOrder } from "../../api/admin";
+import { adjustOrder, downloadInvoice, getAdminOrder, priceQuote } from "../../api/admin";
 import type { OrderAdjustmentType } from "../../api/admin";
 import { ErrorMessage } from "../../components/layout/AsyncState";
 import { Badge } from "../../components/ui/badge";
@@ -17,7 +17,7 @@ import {
 } from "../../components/ui/select";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Textarea } from "../../components/ui/textarea";
-import { formatCurrency } from "../../lib/utils";
+import { formatCurrency, PRICING_TBD_LABEL } from "../../lib/utils";
 import type { AdminOrder, OrderStatus } from "../../types";
 
 const ADJUSTMENT_TYPES: { value: OrderAdjustmentType; label: string; disabled?: boolean }[] = [
@@ -28,6 +28,10 @@ const ADJUSTMENT_TYPES: { value: OrderAdjustmentType; label: string; disabled?: 
   { value: "status_change", label: "Status change" },
 ];
 
+// Deliberately excludes 'pending_quote': an order leaves that state only by
+// being priced (the Quote panel below), never by a bare status change — the
+// server rejects the transition for the same reason, since the total would
+// still be 0.00. 'refunded' is likewise absent, handled by the refund action.
 const ORDER_STATUSES: OrderStatus[] = [
   "pending_payment",
   "processing",
@@ -49,6 +53,10 @@ export function OrderDetail() {
   const [formError, setFormError] = useState<string | null>(null);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  // order_item id -> typed unit price, for a pending_quote order.
+  const [quotePrices, setQuotePrices] = useState<Record<number, string>>({});
+  const [pricingQuote, setPricingQuote] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
 
   function load() {
     if (!id) return;
@@ -87,6 +95,37 @@ export function OrderDetail() {
       );
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handlePriceQuote(e: FormEvent) {
+    e.preventDefault();
+    if (!order) return;
+    const unpriced = order.items.filter((item) => item.item_type === "line" && item.unit_price == null);
+
+    // Validated here as well as server-side so the admin sees which field is
+    // wrong rather than a single rejected request.
+    const prices: Record<number, number> = {};
+    for (const item of unpriced) {
+      const raw = quotePrices[item.id];
+      const value = Number(raw);
+      if (!raw?.trim() || !Number.isFinite(value) || value <= 0) {
+        setQuoteError(`Enter a price greater than zero for "${item.label}".`);
+        return;
+      }
+      prices[item.id] = value;
+    }
+
+    setPricingQuote(true);
+    setQuoteError(null);
+    try {
+      await priceQuote(order.id, prices);
+      setQuotePrices({});
+      load();
+    } catch (err) {
+      setQuoteError(err instanceof Error ? err.message : "Failed to price this quote");
+    } finally {
+      setPricingQuote(false);
     }
   }
 
@@ -157,11 +196,13 @@ export function OrderDetail() {
                   {item.quantity ? ` × ${item.quantity}` : ""}
                 </span>
                 <span>
-                  {formatCurrency(
-                    item.unit_price
-                      ? item.unit_price * (item.quantity ?? 1)
-                      : (item.amount ?? 0),
-                  )}
+                  {item.unit_price == null && item.amount == null
+                    ? PRICING_TBD_LABEL
+                    : formatCurrency(
+                        item.unit_price
+                          ? item.unit_price * (item.quantity ?? 1)
+                          : (item.amount ?? 0),
+                      )}
                 </span>
               </div>
             ))}
@@ -186,6 +227,43 @@ export function OrderDetail() {
           </div>
         </div>
       </div>
+
+      {order.status === "pending_quote" && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4">
+          <h2 className="font-medium">Price this quote</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            This customer ordered a custom size, so nothing has been charged. Set a price for each
+            item below — the order moves to awaiting payment and the customer is notified that their
+            quote is ready.
+          </p>
+          <form onSubmit={handlePriceQuote} className="mt-4 flex max-w-md flex-col gap-4">
+            {order.items
+              .filter((item) => item.item_type === "line" && item.unit_price == null)
+              .map((item) => (
+                <div key={item.id} className="space-y-1">
+                  <Label>
+                    {item.label}
+                    {item.quantity && item.quantity > 1 ? ` (unit price × ${item.quantity})` : ""}
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={quotePrices[item.id] ?? ""}
+                    onChange={(e) =>
+                      setQuotePrices((prev) => ({ ...prev, [item.id]: e.target.value }))
+                    }
+                  />
+                </div>
+              ))}
+            {quoteError && <ErrorMessage message={quoteError} />}
+            <Button type="submit" disabled={pricingQuote} className="w-fit">
+              {pricingQuote ? "Saving…" : "Send quote to customer"}
+            </Button>
+          </form>
+        </div>
+      )}
 
       <div className="rounded-lg border p-4">
         <h2 className="mb-4 font-medium">Add adjustment</h2>

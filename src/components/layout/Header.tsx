@@ -1,4 +1,5 @@
 import {
+  Bell,
   ChevronDown,
   Heart,
   Loader2,
@@ -326,6 +327,11 @@ export function Header() {
                       <Sparkles className="mr-2 h-4 w-4" /> My Designs
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/account/notifications">
+                      <Bell className="mr-2 h-4 w-4" /> Notifications
+                    </Link>
+                  </DropdownMenuItem>
                   {user.role === 'admin' && (
                     <DropdownMenuItem asChild>
                       <Link to="/admin">Admin panel</Link>
@@ -447,6 +453,13 @@ export function Header() {
                 </Link>
                 <Link to="/account/designs" onClick={() => setMobileOpen(false)} className="flex items-center py-2">
                   <Sparkles className="mr-2 h-4 w-4" /> My Designs
+                </Link>
+                <Link
+                  to="/account/notifications"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center py-2"
+                >
+                  <Bell className="mr-2 h-4 w-4" /> Notifications
                 </Link>
                 {user.role === 'admin' && (
                   <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center py-2">

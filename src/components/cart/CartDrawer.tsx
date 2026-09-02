@@ -1,7 +1,7 @@
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatCurrencyOrTbd, PRICING_TBD_LABEL } from '../../lib/utils';
 import type { CartItem } from '../../types';
 import { buttonVariants } from '../ui/button';
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '../ui/sheet';
@@ -95,7 +95,7 @@ function DrawerLineItem({ item, onUpdateQuantity, onRemove }: DrawerLineItemProp
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
-        <p className="text-xs text-muted-foreground">{formatCurrency(item.price)} each</p>
+        <p className="text-xs text-muted-foreground">{formatCurrencyOrTbd(item.price)}{item.isQuote ? '' : ' each'}</p>
         {item.selectedOptions && (
           <p className="text-xs text-muted-foreground">
             {item.sizeInches != null && `${item.sizeInches}" `}
@@ -124,7 +124,9 @@ function DrawerLineItem({ item, onUpdateQuantity, onRemove }: DrawerLineItemProp
             </button>
           </div>
           <p className="text-sm font-medium">
-            {formatCurrency(item.price * item.quantity + (item.flatFeeTotal ?? 0))}
+            {item.price == null
+              ? PRICING_TBD_LABEL
+              : formatCurrency(item.price * item.quantity + (item.flatFeeTotal ?? 0))}
           </p>
         </div>
       </div>

@@ -153,7 +153,10 @@ export interface CartItem {
   cartId: number;
   productId: number;
   name: string;
-  price: number;
+  // Null for a quote item — its price is unknown, not zero, so the UI must
+  // render "Pricing TBD" rather than a figure.
+  price: number | null;
+  isQuote: boolean;
   quantity: number;
   imageUrl: string | null;
   // Configurable-product fields — null/undefined for plain products.
@@ -164,7 +167,21 @@ export interface CartItem {
 
 export interface Cart {
   items: CartItem[];
+  // Excludes quote items, so it is a partial figure whenever hasQuoteItems.
   subtotal: number;
+  hasQuoteItems: boolean;
+}
+
+// One customer-facing notification (customer_notifications, migration 041).
+export type CustomerNotificationType = 'quote_requested' | 'quote_priced';
+
+export interface CustomerNotification {
+  id: number;
+  type: CustomerNotificationType;
+  orderId: number | null;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface User {
@@ -176,6 +193,9 @@ export interface User {
 
 export type OrderStatus =
   | 'pending_payment'
+  // Awaiting a hand-written quote for a custom-size item: no total yet, and
+  // Stripe refuses payment until an admin prices it (migration 039).
+  | 'pending_quote'
   | 'processing'
   | 'shipped'
   | 'delivered'
@@ -275,7 +295,10 @@ export interface Notification {
 
 /** One entry per storefront contact surface. Mirrors the `topic` enum in the
  *  server's 036_create_contact_submissions.js migration. */
-export type ContactTopic = 'installer' | 'designer';
+// quote_request is written by the custom-size checkout rather than by a
+// public contact form, but the admin panel lists and filters it like any
+// other topic.
+export type ContactTopic = 'installer' | 'designer' | 'quote_request';
 
 export type ContactSubmissionStatus = 'new' | 'in_progress' | 'closed';
 
@@ -307,7 +330,11 @@ export interface ContactTopicSummary {
 
 export type DesignType = 'upload' | 'draw' | 'text';
 export type CustomNeonDesignStatus = 'pending' | 'processing' | 'ready' | 'needs_review' | 'failed';
-export type NeonSize = 'small' | 'medium' | 'large';
+// 'custom' is the customer-specified size: they type width/height and the
+// design is quoted by hand rather than priced from NEON_SIZE_PRICES. Mirrors
+// SIZES in anthony_b/src/services/customNeonDesign.service.js.
+export type PresetNeonSize = 'small' | 'medium' | 'large';
+export type NeonSize = PresetNeonSize | 'custom';
 // Mirrors NEON_COLORS in anthony_b/src/services/customNeonDesign.service.js —
 // the backend rejects anything outside that list with 400 Invalid neon_color.
 export type NeonPresetColor =
@@ -343,7 +370,18 @@ export interface CustomNeonDesign {
   designType: DesignType;
   inputPayload: CustomNeonDesignInputPayload;
   size: NeonSize | null;
+  // Populated only when size === 'custom'; null for every preset.
+  customWidthIn: number | null;
+  customHeightIn: number | null;
+  // Server-derived '<w>"x<h>"' label covering both preset and custom sizes,
+  // so the UI never has to branch on which kind it is.
+  dimensions: string | null;
+  // True when the design needs a hand-written quote — the storefront shows
+  // "Pricing TBD" instead of a figure and collects contact details at
+  // checkout. Derived from size on the server, never stored.
+  isQuote: boolean;
   neonColor: NeonColor | null;
+  // Null until an admin prices a custom-size design.
   price: number | null;
   status: CustomNeonDesignStatus;
   attempts: number;

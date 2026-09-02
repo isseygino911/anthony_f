@@ -1,5 +1,5 @@
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatCurrencyOrTbd, PRICING_TBD_LABEL } from '../../lib/utils';
 import type { CartItem } from '../../types';
 import { Button } from '../ui/button';
 
@@ -19,7 +19,7 @@ export function CartLineItem({ item, onUpdateQuantity, onRemove }: CartLineItemP
       </div>
       <div className="flex-1">
         <p className="text-sm font-medium uppercase tracking-wide">{item.name}</p>
-        <p className="text-sm text-muted-foreground">{formatCurrency(item.price)} each</p>
+        <p className="text-sm text-muted-foreground">{formatCurrencyOrTbd(item.price)}{item.isQuote ? '' : ' each'}</p>
         {item.selectedOptions && (
           <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
             {item.sizeInches != null && <p>Size: {item.sizeInches}&quot;</p>}
@@ -62,7 +62,9 @@ export function CartLineItem({ item, onUpdateQuantity, onRemove }: CartLineItemP
         </Button>
       </div>
       <p className="w-20 text-right font-medium">
-        {formatCurrency(item.price * item.quantity + (item.flatFeeTotal ?? 0))}
+        {item.price == null
+              ? PRICING_TBD_LABEL
+              : formatCurrency(item.price * item.quantity + (item.flatFeeTotal ?? 0))}
       </p>
       <Button variant="ghost" size="icon" onClick={onRemove} aria-label="Remove item">
         <Trash2 className="h-4 w-4" />

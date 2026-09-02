@@ -26,6 +26,7 @@ import { Insights } from './pages/admin/Insights';
 import { ThemeSettings } from './pages/admin/ThemeSettings';
 import { Favorites } from './pages/storefront/Account/Favorites';
 import { MyDesigns } from './pages/storefront/Account/MyDesigns';
+import { Notifications as AccountNotifications } from './pages/storefront/Account/Notifications';
 import { Orders as MyOrders } from './pages/storefront/Account/Orders';
 import { CartPage } from './pages/storefront/Cart';
 import { CategoryPage } from './pages/storefront/Category';
@@ -93,6 +94,14 @@ function App() {
                     element={
                       <RequireAuth>
                         <MyOrders />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/account/notifications"
+                    element={
+                      <RequireAuth>
+                        <AccountNotifications />
                       </RequireAuth>
                     }
                   />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../../../api/client';
-import { NEON_SIZE_LABELS, confirmDesign, formatNeonColor, listMyDesigns } from '../../../api/customNeon';
+import { confirmDesign, formatNeonColor, listMyDesigns } from '../../../api/customNeon';
 import { EmptyState, ErrorMessage } from '../../../components/layout/AsyncState';
 import { DesignStatusBadge } from '../../../components/product/DesignStatusBadge';
 import { Button } from '../../../components/ui/button';
@@ -95,7 +95,7 @@ export function MyDesigns() {
                     {/* No `capitalize`: formatNeonColor already returns display-ready
                         text, and it would mangle a custom hex like #FF2D95. */}
                     <p className="text-sm text-muted-foreground">
-                      {design.size ? `${NEON_SIZE_LABELS[design.size]} · ${formatNeonColor(design.neonColor)}` : '—'}
+                      {design.dimensions ? `${design.dimensions} · ${formatNeonColor(design.neonColor)}` : '—'}
                     </p>
                   </div>
                   <DesignStatusBadge status={design.status} />

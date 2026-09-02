@@ -16,7 +16,7 @@ import {
 } from '../../api/admin';
 import type { ProductOptionGroupInput } from '../../api/admin';
 import { ApiError } from '../../api/client';
-import { NEON_SIZE_LABELS, NEON_SIZE_PRICES, describeNeonColorForDescription } from '../../api/customNeon';
+import { NEON_SIZE_PRICES, describeNeonColorForDescription } from '../../api/customNeon';
 import { getCategories, getGroups, getProduct, getProductOptions, previewProductPrice } from '../../api/products';
 import { ErrorMessage } from '../../components/layout/AsyncState';
 import { FormulaBuilder } from '../../components/admin/FormulaBuilder';
@@ -166,7 +166,10 @@ export function ProductForm() {
     if (!designId) return;
     getAdminCustomNeonDesign(designId)
       .then((design) => {
-        const dimensions = design.size ? NEON_SIZE_LABELS[design.size] : null;
+        // Server-derived, so it covers customer-typed dimensions as well as
+        // the presets and matches describeDimensions() exactly — the
+        // description below has to be byte-identical to the server's.
+        const dimensions = design.dimensions;
         setDesignPreviewUrl(design.generatedImageUrl);
         setForm((prev) => ({
           ...prev,
@@ -177,7 +180,13 @@ export function ProductForm() {
           description: dimensions
             ? `Custom AI-generated neon sign design (${dimensions}, ${describeNeonColorForDescription(design.neonColor)}).`
             : prev.description,
-          price: String(design.price ?? (design.size ? NEON_SIZE_PRICES[design.size] : '')),
+          // A custom-size design has no preset price and may not have been
+          // quoted yet — left blank for the admin to fill in rather than
+          // prefilled with a preset price that does not apply to it.
+          price: String(
+            design.price ??
+              (design.size && design.size !== 'custom' ? NEON_SIZE_PRICES[design.size] : '')
+          ),
           sku: `NEON-PUB-${design.id}`,
         }));
       })

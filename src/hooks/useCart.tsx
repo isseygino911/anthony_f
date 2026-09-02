@@ -19,7 +19,7 @@ interface CartContextValue {
   clear: () => Promise<void>;
 }
 
-const EMPTY_CART: Cart = { items: [], subtotal: 0 };
+const EMPTY_CART: Cart = { items: [], subtotal: 0, hasQuoteItems: false };
 
 const CartContext = createContext<CartContextValue | null>(null);
 

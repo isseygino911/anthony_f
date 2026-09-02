@@ -173,6 +173,16 @@ export function adjustOrder(id: number, input: OrderAdjustmentInput) {
   return api.patch<{ order: Order; auditLogEntry: OrderAuditLogEntry }>(`/admin/orders/${id}`, input);
 }
 
+// Prices a pending_quote order's unpriced lines and releases it for payment.
+// `prices` maps order_item id -> unit price; every unpriced line must appear,
+// or the server rejects the whole call (order.service.js#priceQuote).
+export function priceQuote(id: number, prices: Record<number, number>) {
+  return api.post<{ order: Order; auditLogEntry: OrderAuditLogEntry }>(
+    `/admin/orders/${id}/price-quote`,
+    { prices }
+  );
+}
+
 // Binary PDF response — the shared `api` wrapper is JSON-only, so this is a
 // standalone fetch that mirrors client.ts's base-URL + credentials handling.
 export async function downloadInvoice(id: number | string): Promise<void> {

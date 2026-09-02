@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAdminCustomNeonDesigns, setCustomNeonDesignShowcased } from '../../api/admin';
-import { NEON_SIZE_LABELS, formatNeonColor } from '../../api/customNeon';
+import { formatNeonColor } from '../../api/customNeon';
 import { EmptyState, ErrorMessage } from '../../components/layout/AsyncState';
 import { DesignStatusBadge } from '../../components/product/DesignStatusBadge';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Switch } from '../../components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, PRICING_TBD_LABEL } from '../../lib/utils';
 import type { CustomNeonDesign } from '../../types';
 
 // listShowcase only ever surfaces a finished design with an un-purged
@@ -97,9 +97,15 @@ export function CustomNeonDesigns() {
                     </TableCell>
                     <TableCell className="capitalize">{design.designType}</TableCell>
                     <TableCell className="capitalize">
-                      {design.size ? `${NEON_SIZE_LABELS[design.size]} / ${formatNeonColor(design.neonColor)}` : '—'}
+                      {design.dimensions ? `${design.dimensions} / ${formatNeonColor(design.neonColor)}` : '—'}
                     </TableCell>
-                    <TableCell>{design.price !== null ? formatCurrency(design.price) : '—'}</TableCell>
+                    <TableCell>
+                      {design.price !== null
+                        ? formatCurrency(design.price)
+                        : design.isQuote
+                          ? PRICING_TBD_LABEL
+                          : '—'}
+                    </TableCell>
                     <TableCell>
                       <DesignStatusBadge status={design.status} />
                     </TableCell>
@@ -153,10 +159,14 @@ export function CustomNeonDesigns() {
                   )}
                   <div className="min-w-0 flex-1">
                     <Link to={`/admin/custom-neon-designs/${design.id}`} className="font-medium capitalize hover:underline">
-                      {design.designType} {design.size ? `— ${NEON_SIZE_LABELS[design.size]}` : ''}
+                      {design.designType} {design.dimensions ? `— ${design.dimensions}` : ''}
                     </Link>
                     <p className="text-xs text-muted-foreground">
-                      {design.price !== null ? formatCurrency(design.price) : 'Not confirmed yet'}
+                      {design.price !== null
+                        ? formatCurrency(design.price)
+                        : design.isQuote
+                          ? PRICING_TBD_LABEL
+                          : 'Not confirmed yet'}
                     </p>
                   </div>
                   <DesignStatusBadge status={design.status} />

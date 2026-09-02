@@ -27,6 +27,7 @@ import type { OrderStatus, OrderSummary } from "../../types";
 const STATUS_OPTIONS: (OrderStatus | "all")[] = [
   "all",
   "pending_payment",
+  "pending_quote",
   "processing",
   "shipped",
   "delivered",
@@ -39,6 +40,7 @@ const STATUS_VARIANT: Record<
   "default" | "success" | "warning" | "destructive" | "secondary"
 > = {
   pending_payment: "warning",
+  pending_quote: "secondary",
   processing: "default",
   shipped: "default",
   delivered: "success",

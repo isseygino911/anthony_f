@@ -36,6 +36,22 @@ export const CONTACT_TOPICS: Record<ContactTopic, ContactTopicConfig> = {
     successBody:
       'Thanks — our partnerships team will review your details and be in touch about dealer pricing and training.',
   },
+  // Not reachable from a contact page: this config backs the form shown
+  // during a custom-size checkout (see Checkout.tsx), where the customer has
+  // already chosen dimensions and just needs to leave contact details. The
+  // server rejects a public submit() on this topic.
+  quote_request: {
+    title: 'Where should we send your quote?',
+    description:
+      'Your design needs a custom quote. Leave your details and our team will price it and get back to you.',
+    messagePlaceholder:
+      'Anything else we should know — a deadline, where it will hang, or how you plan to mount it?',
+    showCompany: false,
+    submitLabel: 'Request my quote',
+    successTitle: 'Quote requested',
+    successBody:
+      'Thanks — we have your order and will email you a price shortly. Nothing has been charged yet.',
+  },
   designer: {
     title: 'Speak with a Designer',
     description:
