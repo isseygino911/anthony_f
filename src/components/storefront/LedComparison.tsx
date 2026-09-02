@@ -46,7 +46,7 @@ export function LedComparison() {
   return (
     <section
       aria-labelledby="comparison-heading"
-      className="border-y border-border bg-background py-32 sm:py-40"
+      className="border-y border-border bg-background  sm:py-20"
     >
       <div className="container">
         <div ref={headRef} className="mb-16 max-w-2xl">
