@@ -1,9 +1,12 @@
 import { useGSAP } from '@gsap/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, PlugZap, ShieldCheck, Truck } from 'lucide-react';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ContactDialog } from '../../components/contact/ContactDialog';
 import { EditorialGallery } from '../../components/storefront/EditorialGallery';
+import { FaqSection } from '../../components/storefront/FaqSection';
+import { LedComparison } from '../../components/storefront/LedComparison';
+import { NeonTeaser } from '../../components/storefront/NeonTeaser';
 import { SpotlightCard } from '../../components/ui/spotlight-card';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { useStaggerReveal } from '../../hooks/useStaggerReveal';
@@ -25,16 +28,27 @@ const PROCESS_STEPS = [
   {
     n: '03',
     title: 'Fabrication',
-    body: 'Our artisans hand-wire every bend, resulting in a premium, museum-grade light installation.',
+    body: 'UV-stable silicone diffusion over high-CRI SMD LEDs, mounted on cast acrylic with machined brass standoffs — hand-finished by our artisans.',
   },
+];
+
+// Reassurances that belong next to the first call to action rather than buried
+// in the FAQ: the three objections people raise before they will start a design.
+const TRUST_POINTS = [
+  { icon: ShieldCheck, label: '12V child & pet safe' },
+  { icon: PlugZap, label: 'Dimmer included' },
+  { icon: Truck, label: 'Fast global delivery' },
 ];
 
 export function Home() {
   return (
     <div className="flex flex-col">
       <Hero />
+      <NeonTeaser />
+      <LedComparison />
       <Process />
       <EditorialGallery />
+      <FaqSection />
       <ImmersiveCTA />
     </div>
   );
@@ -58,22 +72,28 @@ function Hero() {
   return (
     <header
       ref={rootRef}
-      className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden bg-foreground"
+      className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden bg-background"
     >
       <div ref={vantaRef} className="pointer-events-none absolute inset-0 z-0" />
+      {/* Bloom behind the headline so the type reads as lit rather than printed. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[70vw] w-[70vw] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[140px]"
+        style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 7%, transparent), transparent 70%)' }}
+      />
 
       <div className="relative z-20 flex w-full justify-center px-6 py-20 sm:px-10 md:px-12 lg:px-16">
         <div className="w-full max-w-2xl text-center">
           <span className="hero-eyebrow mb-6 inline-flex items-center border-l-2 border-brand pl-4 font-label text-xs uppercase tracking-[0.4em] text-brand">
             Custom Neon Studio
           </span>
-          <h1 className="font-display text-6xl leading-[0.85] text-foreground sm:text-7xl md:text-8xl">
+          <h1 className="font-display text-6xl uppercase leading-[0.85] text-foreground sm:text-7xl md:text-8xl">
             <span className="hero-line block overflow-hidden">
               <span className="block">Sculpting</span>
             </span>
             <span className="hero-line block overflow-hidden">
               <span className="block">
-                <em className="font-light not-italic text-brand">Light</em> Into
+                <em className="brand-text-gradient not-italic">Light</em> Into
               </span>
             </span>
             <span className="hero-line block overflow-hidden">
@@ -88,10 +108,10 @@ function Hero() {
             <div className="flex flex-col items-center gap-8 sm:flex-row sm:justify-center">
               <Link
                 to="/custom-neon"
-                className="group relative overflow-hidden bg-foreground px-12 py-5 font-label text-xs uppercase tracking-[0.2em] text-background"
+                className="group relative overflow-hidden bg-brand px-12 py-5 font-label text-xs uppercase tracking-[0.2em] text-brand-foreground"
               >
                 <span className="relative z-10">The Design Tool</span>
-                <div className="absolute inset-0 translate-y-full bg-brand transition-transform duration-500 group-hover:translate-y-0" />
+                <div className="absolute inset-0 translate-y-full bg-foreground transition-transform duration-500 group-hover:translate-y-0" />
               </Link>
               <a
                 href="#gallery"
@@ -100,6 +120,14 @@ function Hero() {
                 View Portfolio <ArrowRight className="h-4 w-4" />
               </a>
             </div>
+            <ul className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+              {TRUST_POINTS.map(({ icon: Icon, label }) => (
+                <li key={label} className="flex items-center gap-2 font-label text-xs uppercase tracking-widest text-muted-foreground">
+                  <Icon aria-hidden className="h-4 w-4 text-brand" />
+                  {label}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
@@ -131,13 +159,15 @@ function Process() {
                 i === 1 && 'md:-mt-12',
               )}
             >
-              <span className="pointer-events-none absolute left-4 top-4 select-none font-display text-7xl text-foreground/5 transition-colors group-hover:text-brand/10">
+              <span
+                className="pointer-events-none absolute left-4 top-4 select-none font-display text-7xl text-foreground/5 transition-colors group-hover:[color:color-mix(in_srgb,var(--brand-primary)_18%,transparent)]"
+              >
                 {step.n}
               </span>
               <div className="relative z-10">
                 <h3 className="mb-6 font-display text-2xl text-foreground">{step.title}</h3>
                 <p className="mb-8 text-muted-foreground">{step.body}</p>
-                <div className="h-px w-8 bg-brand/40" />
+                <div className="brand-hairline h-px w-8" />
               </div>
             </SpotlightCard>
           ))}
@@ -175,7 +205,7 @@ function ImmersiveCTA() {
               type="button"
               className="group flex items-center gap-4 font-label text-xs font-bold uppercase tracking-[0.3em] text-brand"
             >
-              <span className="h-px w-12 bg-brand/30 transition-all group-hover:w-16" />
+              <span className="brand-hairline h-px w-12 transition-all group-hover:w-16" />
               Speak with a Designer
             </button>
           </ContactDialog>

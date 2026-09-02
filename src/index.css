@@ -32,7 +32,15 @@
     /* Brand tokens: fallback values only, immediately overwritten by
        theme/applyTheme.ts once GET /api/theme resolves. Set to the Stitch
        "Neon Glow" palette (theme/palettes.ts `neon`) so an unthemed load
-       still reads as this brand rather than the old blue/violet default. */
+       still reads as this brand rather than the old blue/violet default.
+
+       These are raw hex strings, NOT the space-separated HSL triplets the
+       neutral tokens above use. That means Tailwind's alpha modifiers do not
+       work on brand utilities: `bg-brand/40` compiles to `rgb(var(--brand-primary) / 0.4)`,
+       which is invalid CSS, so the browser drops the whole declaration —
+       silently, with no console error and no build failure. For a translucent
+       brand colour always write
+       `color-mix(in srgb, var(--brand-primary) 40%, transparent)` instead. */
     --brand-primary: #e6ff00;
     --brand-secondary: #bdd200;
     --brand-primary-tint-10: #f4ffa3;
@@ -89,6 +97,27 @@
   }
   .neon-button-glow:hover {
     box-shadow: 0 0 20px color-mix(in srgb, var(--brand-primary) 60%, transparent);
+  }
+
+  /* Brand gradient for emphasis words in display headings. The solid `color`
+     is declared first as the fallback: if background-clip:text is unsupported
+     or the gradient fails to resolve, the text stays readable instead of
+     rendering transparent (i.e. invisible). */
+  .brand-text-gradient {
+    color: var(--brand-primary);
+    background-image: linear-gradient(100deg, var(--brand-primary), var(--brand-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Section divider that fades out from the brand colour. */
+  .brand-hairline {
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--brand-primary) 60%, transparent),
+      transparent
+    );
   }
 
   @media (prefers-reduced-motion: reduce) {
