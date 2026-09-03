@@ -50,7 +50,7 @@ export function EditorialGallery() {
   );
 
   return (
-    <section id="gallery" className="relative overflow-hidden bg-background py-32 sm:py-40">
+    <section id="gallery" className="relative overflow-hidden mx-auto bg-background py-32 sm:py-40">
       <div className="container">
         <div ref={headRef} className="relative mb-16">
           <span className="mb-4 block font-label text-xs uppercase tracking-[0.5em] text-brand">
