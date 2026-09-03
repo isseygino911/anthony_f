@@ -6,27 +6,27 @@
   :root {
     /* Neutral surface/text tokens (shadcn defaults) — mode-aware via
        [data-mode], independent of brand hue per architecture.md §5.3.
-       "Lumina Luxe" scale (from the Stitch design system): a near-black,
-       slightly cool-neutral surface stack built for "the glow in the dark" —
-       the brand is intentionally dark-only, so [data-mode='dark'] below
-       converges on the same values rather than inverting to a light scale. */
-    --background: 0 0% 4%;
-    --foreground: 0 0% 89%;
-    --card: 180 4% 11%;
-    --card-foreground: 0 0% 89%;
-    --popover: 180 4% 11%;
-    --popover-foreground: 0 0% 89%;
-    --muted: 200 4% 16%;
-    --muted-foreground: 64 22% 73%;
-    --secondary: 180 2% 20%;
-    --secondary-foreground: 0 0% 89%;
-    --accent: 180 3% 12%;
-    --accent-foreground: 0 0% 89%;
-    --destructive: 6 100% 84%;
-    --destructive-foreground: 357 100% 21%;
-    --border: 180 1% 14%;
-    --input: 180 1% 14%;
-    --ring: 66 100% 50%;
+       :root is the LIGHT scale and the site default. The dark "Lumina Luxe"
+       stack lives on [data-mode='dark'], which is applied both site-wide
+       (when site_theme.default_mode resolves to 'dark') and to individual
+       sections that opt into the dark treatment — see .dark-section. */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --muted: 180 6% 96%;
+    --muted-foreground: 200 4% 40%;
+    --secondary: 180 6% 94%;
+    --secondary-foreground: 0 0% 15%;
+    --accent: 180 6% 96%;
+    --accent-foreground: 0 0% 15%;
+    --destructive: 357 75% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 180 6% 89%;
+    --input: 180 6% 89%;
+    --ring: 66 60% 40%;
     --radius: 0.5rem;
 
     /* Brand tokens: fallback values only, immediately overwritten by
@@ -50,7 +50,12 @@
     --brand-foreground: #2e3400;
   }
 
-  [data-mode='dark'] {
+  /* The "Lumina Luxe" near-black stack. Applied site-wide via [data-mode]
+     when the resolved mode is dark, and to individual opted-in sections via
+     .dark-section — the token values are declared once here and inherited by
+     everything inside either scope, so a dark island needs no bespoke colours. */
+  [data-mode='dark'],
+  .dark-section {
     --background: 0 0% 4%;
     --foreground: 0 0% 89%;
     --card: 180 4% 11%;
@@ -68,6 +73,14 @@
     --border: 180 1% 14%;
     --input: 180 1% 14%;
     --ring: 66 100% 50%;
+  }
+
+  /* Redefining the tokens above only rebinds the variables; it does not paint
+     anything. A dark section must also actually draw the dark surface and pick
+     up the light-on-dark text colour, hence these two declarations. */
+  .dark-section {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   * {

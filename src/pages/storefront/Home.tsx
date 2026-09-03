@@ -170,7 +170,7 @@ function ImmersiveCTA() {
   const ref = useScrollReveal<HTMLDivElement>();
 
   return (
-    <section className="relative flex items-center justify-center overflow-hidden py-40 text-center sm:py-60">
+    <section className="dark-section relative flex items-center justify-center overflow-hidden py-40 text-center sm:py-60">
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 h-[80vw] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full blur-[150px]"
         style={{ background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}

@@ -22,17 +22,29 @@ const MAX_TEXT_LENGTH = 60;
 
 // Real neon reads as a white-hot core inside a coloured halo — filling the
 // glyphs with the tube colour instead looks flat and plastic. So: white text,
-// two tight white shadows for the core, then four progressively wider,
-// progressively softer shadows in the tube colour for the bloom.
+// tight white shadows for the core, then progressively wider, progressively
+// softer shadows in the tube colour for the bloom.
+//
+// The bloom runs deliberately hot: the near layers stay at full saturation so
+// the tube reads as a light source rather than coloured text, and the outer
+// layers fade out over a long distance (up to 160px) so the halo falls off the
+// way real light does instead of ending at a hard edge.
 function neonTextShadow(hex: string): string {
-  const soft = `color-mix(in srgb, ${hex} 70%, transparent)`;
+  const soft = `color-mix(in srgb, ${hex} 65%, transparent)`;
+  const faint = `color-mix(in srgb, ${hex} 35%, transparent)`;
   return [
-    '0 0 4px #fff',
-    '0 0 8px #fff',
-    `0 0 16px ${hex}`,
-    `0 0 32px ${hex}`,
-    `0 0 64px ${soft}`,
-    `0 0 96px ${soft}`,
+    // White-hot core — three tight layers so the glyph centre blows out to
+    // white the way a lit tube does under a camera.
+    '0 0 2px #fff',
+    '0 0 6px #fff',
+    '0 0 12px #fff',
+    // Saturated near-bloom.
+    `0 0 20px ${hex}`,
+    `0 0 40px ${hex}`,
+    `0 0 70px ${hex}`,
+    // Long, soft falloff.
+    `0 0 110px ${soft}`,
+    `0 0 160px ${faint}`,
   ].join(', ');
 }
 
@@ -55,13 +67,28 @@ export function HeroPreview() {
     <div className="hero-preview relative">
       {/* The ambient wash the whole panel floats on. It is keyed to the chosen
           tube colour, so picking a swatch relights the corner of the page —
-          the panel reads as a lamp rather than as a screenshot. */}
+          the panel reads as a lamp rather than as a screenshot.
+
+          Two stacked layers, because a single wash cannot do both jobs on a
+          light background: a wide, soft halo for reach, plus a tighter, more
+          saturated core so the colour is actually identifiable. The mix
+          percentages run high (55%/40%) — on the previous near-black surface a
+          22% tint was plenty, but the same value over white washes out to
+          nothing, so the colour has to be laid on considerably harder here. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -inset-16 -z-10 rounded-full blur-[120px] transition-opacity duration-700"
+        className="pointer-events-none absolute -inset-24 -z-10 rounded-full blur-[130px] transition-opacity duration-700"
         style={{
-          opacity: lit ? 1 : 0.15,
-          background: `radial-gradient(circle at 50% 45%, color-mix(in srgb, ${swatch} 22%, transparent), transparent 70%)`,
+          opacity: lit ? 1 : 0.12,
+          background: `radial-gradient(circle at 50% 45%, color-mix(in srgb, ${swatch} 55%, transparent), transparent 72%)`,
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-4 -z-10 rounded-full blur-[70px] transition-opacity duration-700"
+        style={{
+          opacity: lit ? 1 : 0.12,
+          background: `radial-gradient(circle at 50% 45%, color-mix(in srgb, ${swatch} 40%, transparent), transparent 65%)`,
         }}
       />
 
@@ -94,8 +121,12 @@ export function HeroPreview() {
           </button>
         </div>
 
-        {/* Preview wall */}
-        <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-2xl border border-border bg-background/70 p-8 sm:min-h-[300px]">
+        {/* Preview wall. Always dark, regardless of the site theme: the lit tube
+            renders as white text plus a coloured glow, which is physically what
+            neon looks like but is invisible on a light surface. `dark-section`
+            rebinds the surface/text tokens to the dark scale for this subtree
+            only, so the glow has something to glow against. */}
+        <div className="dark-section relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-2xl border border-border bg-background p-8 sm:min-h-[300px]">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
@@ -104,6 +135,20 @@ export function HeroPreview() {
               backgroundSize: '18px 18px',
             }}
           />
+          {/* Ambient spill: a lit sign washes its colour onto the wall behind it.
+              Without this the glow stops dead at the glyph edge and the tube
+              reads as a sticker rather than a light source. Fades out with the
+              lights, and sits behind the backplate so the wash never dims the
+              tube itself. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 transition-opacity duration-700"
+            style={{
+              opacity: lit ? 1 : 0,
+              background: `radial-gradient(60% 55% at 50% 50%, color-mix(in srgb, ${swatch} 26%, transparent), transparent 70%)`,
+            }}
+          />
+
           {/* The acrylic backplate the tube is mounted on, standoffs and all. */}
           <div className="relative rounded-xl border border-white/10 bg-white/[0.03] px-8 py-6 shadow-2xl sm:px-12 sm:py-8">
             {['left-2 top-2', 'right-2 top-2', 'left-2 bottom-2', 'right-2 bottom-2'].map((position) => (
