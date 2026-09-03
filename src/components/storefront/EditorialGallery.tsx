@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import { EXAMPLE_DESIGNS } from '../../api/customNeon';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
@@ -13,6 +13,10 @@ export function EditorialGallery() {
   const headRef = useScrollReveal<HTMLDivElement>();
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  // Whether the strip fits its viewport, i.e. there is nothing to drag. Drives
+  // the centring: a strip that fits is centred, one that overflows starts flush
+  // left so no card is stranded off-screen.
+  const [fits, setFits] = useState(false);
 
   useGSAP(
     () => {
@@ -33,24 +37,61 @@ export function EditorialGallery() {
       }
 
       // Draggable, inertia-scrolling carousel — bounded to however far the
-      // track actually overflows its viewport (recomputed per items/width).
-      const overflow = trackRef.current.scrollWidth - viewportRef.current.clientWidth;
-      if (overflow <= 0) return;
+      // track actually overflows its viewport.
+      //
+      // The instance is created unconditionally rather than only when the track
+      // currently overflows: at mount that measurement can legitimately be 0
+      // (layout not yet settled), and bailing out there left the carousel dead
+      // for the life of the page. Bounds are recomputed on resize instead.
+      const measure = () =>
+        Math.max(0, (trackRef.current?.scrollWidth ?? 0) - (viewportRef.current?.clientWidth ?? 0));
 
-      Draggable.create(trackRef.current, {
+      const [drag] = Draggable.create(trackRef.current, {
         type: 'x',
         inertia: true,
-        bounds: { minX: -overflow, maxX: 0 },
+        bounds: { minX: -measure(), maxX: 0 },
         edgeResistance: 0.85,
         cursor: 'grab',
         activeCursor: 'grabbing',
+        // Let a mostly-vertical gesture fall through to native page scrolling
+        // rather than being swallowed as a horizontal drag.
+        allowNativeTouchScrolling: true,
       });
+
+      const applyBounds = () => {
+        const overflow = measure();
+        setFits(overflow <= 0);
+        drag.applyBounds({ minX: -overflow, maxX: 0 });
+        // Nothing to drag (wide screens): disable so the grab cursor and drag
+        // affordance do not appear on a strip that cannot move.
+        if (overflow <= 0) drag.disable();
+        else if (!drag.enabled()) drag.enable();
+      };
+
+      applyBounds();
+
+      const observer = new ResizeObserver(applyBounds);
+      observer.observe(viewportRef.current);
+      observer.observe(trackRef.current);
+
+      return () => {
+        observer.disconnect();
+        drag.kill();
+      };
     },
     { scope: viewportRef },
   );
 
+  /*
+   * min-w-0 on the section: it is a flex item, and a flex item defaults to
+   * min-width:auto — it refuses to shrink below the intrinsic width of the card
+   * track, so on mobile the section blew out to the track's full width (1344px
+   * inside a 390px screen). That also silently disabled the carousel: the
+   * Draggable below is only created when the track overflows its viewport, and
+   * an oversized viewport makes that overflow compute to 0.
+   */
   return (
-    <section id="gallery" className="relative overflow-hidden mx-auto bg-background py-32 sm:py-40">
+    <section id="gallery" className="relative min-w-0 overflow-hidden bg-background py-32 sm:py-40">
       <div className="container">
         <div ref={headRef} className="relative mb-16">
           <span className="mb-4 block font-label text-xs uppercase tracking-[0.5em] text-brand">
@@ -64,7 +105,12 @@ export function EditorialGallery() {
       </div>
 
       <div ref={viewportRef} className="cursor-grab overflow-hidden active:cursor-grabbing">
-        <div ref={trackRef} className="flex gap-6 px-6 will-change-transform sm:px-10 md:px-16">
+        {/* justify-center only while the strip fits: with real overflow it would
+            push the leading cards off the left edge, out of reach of the drag. */}
+        <div
+          ref={trackRef}
+          className={`flex gap-6 px-6 will-change-transform sm:px-10 md:px-16 ${fits ? 'justify-center' : ''}`}
+        >
           {items.map((item) => (
             <figure
               key={item.id}
