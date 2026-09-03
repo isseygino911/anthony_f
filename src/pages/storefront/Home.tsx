@@ -56,7 +56,7 @@ function Hero() {
 
       <div className="relative z-20 container grid w-full items-center gap-16 py-24 lg:grid-cols-[1fr_1fr] lg:gap-12 lg:py-20">
         {/* Left: the pitch */}
-        <div className="max-w-xl">
+        <div className="min-w-0 max-w-xl">
           <span className="hero-eyebrow mb-10 inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-border bg-card/60 px-5 py-2.5 font-label text-xs uppercase tracking-[0.16em] text-foreground backdrop-blur-sm">
             Next-gen architectural LED neon
           </span>

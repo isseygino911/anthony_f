@@ -64,7 +64,7 @@ export function HeroPreview() {
   const shown = text.trim() || PLACEHOLDER;
 
   return (
-    <div className="hero-preview relative">
+    <div className="hero-preview relative min-w-0">
       {/* The ambient wash the whole panel floats on. It is keyed to the chosen
           tube colour, so picking a swatch relights the corner of the page —
           the panel reads as a lamp rather than as a screenshot.
@@ -93,8 +93,11 @@ export function HeroPreview() {
       />
 
       <div className="rounded-3xl border border-border bg-card/60 p-5 backdrop-blur-sm sm:p-7">
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <label htmlFor="hero-preview-text" className="flex min-w-0 flex-1 items-center gap-3">
+        {/* Wraps on mobile: at 390px the eyebrow, the field and the lights
+            toggle cannot share a line without squeezing the input down to a
+            couple of visible characters. */}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <label htmlFor="hero-preview-text" className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
             <span className="shrink-0 font-label text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Try typing
             </span>
@@ -126,7 +129,7 @@ export function HeroPreview() {
             neon looks like but is invisible on a light surface. `dark-section`
             rebinds the surface/text tokens to the dark scale for this subtree
             only, so the glow has something to glow against. */}
-        <div className="dark-section relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-2xl border border-border bg-background p-8 sm:min-h-[300px]">
+        <div className="dark-section relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-2xl border border-border bg-background px-4 pb-16 pt-8 sm:min-h-[300px] sm:px-8 sm:pb-8">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
@@ -170,7 +173,10 @@ export function HeroPreview() {
             </p>
           </div>
 
-          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-border bg-card/80 px-4 py-1.5 font-label text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          {/* Caption pill. `max-w` keeps it inside the wall and the text wraps
+              rather than running past both edges: at 390px the single-line
+              version is wider than the preview itself. */}
+          <p className="absolute bottom-3 left-1/2 max-w-[calc(100%-1.5rem)] -translate-x-1/2 text-balance rounded-2xl border border-border bg-card/80 px-3 py-1 text-center font-label text-[9px] uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:rounded-full sm:px-4 sm:py-1.5 sm:text-[11px] sm:tracking-[0.12em] sm:whitespace-nowrap">
             Interactive proof · {FONTS.find((option) => option.value === font)?.label} ·{' '}
             {preset?.label ?? 'Custom'}
           </p>
