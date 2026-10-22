@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, API_BASE_URL } from './client';
 import type { User } from '../types';
 
 export function register(input: { email: string; password: string; name: string }) {
@@ -19,5 +19,5 @@ export function getMe() {
 
 /** Real redirect flow — navigates the browser away, not a fetch call. */
 export function googleLoginUrl(): string {
-  return '/api/auth/google';
+  return `${API_BASE_URL}/api/auth/google`;
 }
